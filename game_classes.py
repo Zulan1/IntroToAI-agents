@@ -10,9 +10,11 @@ class Package:
         self.status = "not picked up"
 
     def get_pickup_loc(self):
+        """get_pickup_loc(self:Self@Package) -> (int, int)"""
         return self.pickup_loc
 
     def get_dropoff_loc(self):
+        """get_dropoff_loc(self:Self@Package) -> (int, int)"""
         return self.dropoff_loc
 
     def get_pickup_time(self):
@@ -40,13 +42,15 @@ class Package:
         else:
             print("Package has already been dropped off.")
             
+        
 class Game:
-    
     def __init__(self):
         self.size = (0,0)
         self.nodes = [(i,j) for i in range(self.size[0]) for j in range(self.size[1])]
-        self.edges = [((i, j), (i, j + 1)) for i in range(self.size[0]) for j in range(self.size[1] - 1)]
-        self.edges += [((i, j), (i + 1, j)) for i in range(self.size[0] - 1) for j in range(self.size[1])]
+        self.edges = [((i, j), (i, j + 1)) for i in range(self.size[0])
+                      for j in range(self.size[1] - 1)]
+        self.edges += [((i, j), (i + 1, j)) for i in range(self.size[0] - 1)
+                       for j in range(self.size[1])]
         self.nodes_colors = ["gray" for _ in range(len(self.nodes))]
         self.edges_colors = ["green" for _ in range(len(self.edges))]
         self.graph = nx.Graph()
