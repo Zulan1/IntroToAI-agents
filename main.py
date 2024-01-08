@@ -1,5 +1,7 @@
 import sys
 from os import path
+from grid import Grid
+from utils import InitGrid
 
 def Main(argc: int, argv: list[str]):
     """Main function of the project
@@ -11,11 +13,16 @@ def Main(argc: int, argv: list[str]):
     filePath = argv[1]
     assert path.exists(filePath), "Path to grid configuration file does not exist!"
 
-    with open(filePath, 'r') as f:
-        lines = list(line.split('#')[0] for line in f.readlines())
+    grid, agents = InitGrid(filePath)
     
-    grid: Grid = 
-
+    while True:
+        for agent in agents:
+            if agent[0] == 'A':
+                # run normal agent
+            if agent[0] == 'H':
+                # run human agent
+            if agent[0] == 'I':
+                # run interfering agent
 
 if __name__ == "__main__":
     Main(sys.argc, sys.argv)
