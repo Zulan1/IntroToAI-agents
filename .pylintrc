@@ -7,5 +7,6 @@ method-naming-style=PascalCase
 module-naming-style=snake_case
 const-naming-style=UPPER_CASE
 variable-naming-style=camelCase
+max-line-length=120
 
 disable=C0114, W1514
