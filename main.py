@@ -17,7 +17,7 @@ def Main(argc: int, argv: list[str]):
     grid: Grid
     agents: list[Agent]
     grid, agents = InitGrid(filePath)
-    
+
     while True:
         for agent in agents:
             agent.AgentStep()
