@@ -1,6 +1,7 @@
 import sys
 from os import path
 from grid import Grid
+from agent import Agent
 from utils import InitGrid
 
 def Main(argc: int, argv: list[str]):
@@ -13,16 +14,13 @@ def Main(argc: int, argv: list[str]):
     filePath = argv[1]
     assert path.exists(filePath), "Path to grid configuration file does not exist!"
 
+    grid: Grid
+    agents: list[Agent]
     grid, agents = InitGrid(filePath)
     
     while True:
         for agent in agents:
-            if agent[0] == 'A':
-                # run normal agent
-            if agent[0] == 'H':
-                # run human agent
-            if agent[0] == 'I':
-                # run interfering agent
+            agent.AgentStep()
 
 if __name__ == "__main__":
     Main(sys.argc, sys.argv)
