@@ -1,3 +1,4 @@
+from enum import Enum
 from package import Package
 
 class Grid:
@@ -12,7 +13,7 @@ class Grid:
             y (int): 2nd dimension size
         """
         self.size = (x, y)
-        self.nodes = {(i,j) for i in range(x) for j in range(y)}
+        self.nodes = {(i, j) for i in range(x) for j in range(y)}
         self.edges = {((i, j), (i, j + 1)) for i in range(x) for j in range(y - 1)}
         self.edges += {((i, j), (i + 1, j)) for i in range(x - 1) for j in range(y)}
         self.fragEdges = set()
@@ -29,14 +30,14 @@ class Grid:
             params (list[str]): parameters to the command
         """
 
-        if cmd == "B":
+        if cmd == UpdateGridType.BLOCK:
             edge = ((int(params[0]), int(params[1])), (int(params[2]), int(params[3])))
             if edge in self.edges:
                 self.edges.remove(edge)
-        elif cmd == "F":
+        if cmd == UpdateGridType.FRAGILE:
             edge = ((int(params[0]), int(params[1])), (int(params[2]), int(params[3])))
             self.fragEdges.add(edge)
-        elif cmd == "P":
+        if cmd == UpdateGridType.PACKAGE:
             self.AddPackage(params)
         # if self.size[0] != 0 and self.size[1] != 0:
         #     self.nodes = [(i,j) for i in range(self.size[0]) for j in range(self.size[1])]
@@ -45,14 +46,21 @@ class Grid:
         #     self.nodes_colors = ["gray" for _ in range(len(self.nodes))]
         #     self.edges_colors = ["green" for _ in range(len(self.edges))]
 
-    def AddPackage(self, params):
+    def AddPackage(self, params: str):
         """Adds a package to the grid
 
         Args:
-            params (_type_): parameters of the package
+            params (str): parameters of the package
         """
         package = Package(params)
         self.packages.append(package)
+
+class UpdateGridType(Enum):
+    """Enum for options to update grid.
+    """
+    BLOCK = 'B'
+    FRAGILE = 'F'
+    PACKAGE = 'P'
 
     # def color_packages(self):
     #     for p in self.packages:

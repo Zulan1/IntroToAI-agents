@@ -42,7 +42,7 @@
 #             temp = int(x.index(';')) if ';' in x else -1 #if x.index(';') == -1 else x.index('\n')
 #             y.append([w for w, i in zip(x, range(len(x))) if i < temp])
 #             create_game_object(y[-1], mygame)
-#             print(mygame.get_edges(), mygame.get_edges_colors(), "\n\n")  
+#             print(mygame.get_edges(), mygame.get_edges_colors(), "\n\n")
            
 #     return mygame
 
