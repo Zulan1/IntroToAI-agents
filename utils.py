@@ -24,7 +24,7 @@ def InitGrid(initFilePath: str) -> (Grid, list[Agent]):
     for line in lines:
         updateGridType = line[0]
         if updateGridType not in UpdateGridType: continue
-        grid.UpdateGrid(line[0], line[1:])
+        grid.UpdateGrid(updateGridType, line[1:])
 
     agents = list()
     for line in lines:
