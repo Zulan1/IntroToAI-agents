@@ -1,6 +1,7 @@
 import sys
 from os import path
 from agent import Agent
+from grid import Grid
 from utils import InitGrid
 
 def Main(argc: int, argv: list[str]):
@@ -12,8 +13,10 @@ def Main(argc: int, argv: list[str]):
     assert argc >= 2, "Arg1 should be the path to grid configuration file"
     filePath = argv[1]
     assert path.exists(filePath), "Path to grid configuration file does not exist!"
-
-    agents: list[Agent] = InitGrid(filePath)
+    
+    grid: Grid
+    agents: list[Agent]
+    grid, agents = InitGrid(filePath)
 
     while True:
         for agent in agents:

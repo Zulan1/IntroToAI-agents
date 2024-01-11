@@ -7,9 +7,9 @@ class Package:
         Args:
             params (list[str]): package parameters
         """
-        self.pickupLoc = (int(params[0]), params[1])
+        self.pickupLoc = (int(params[0]), int(params[1]))
         self.dropoffLoc = int(params[2])
-        self.pickupTime = (int(params[4]), params[5])
+        self.pickupTime = (int(params[4]), int(params[5]))
         self.dropoffMaxtime = int(params[6])
 
     def GetPickupLoc(self) -> (int, int):
