@@ -46,3 +46,8 @@
 
 # # Show the plot
 # plt.show()
+initFilePath = "tests/test1.txt"
+with open(initFilePath, 'r') as f:
+        lines = list(line.split(';')[0].split('#')[1].strip().split(' ') for line in f.readlines() if line.startswith("#"))
+        lines = list(list(filter(lambda e: e!='', line)) for line in lines)
+        print(lines, '\n')

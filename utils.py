@@ -14,7 +14,8 @@ def InitGrid(initFilePath: str) -> (list[list[str]]):
         Grid: Simulator's grid
     """
     with open(initFilePath, 'r') as f:
-        lines = list(line.split(';')[0].split('#')[1].strip().split(' ') for line in f.readlines())
+        lines = list(line.split(';')[0].split('#')[1].strip().split(' ') for line in f.readlines() if line.startswith("#"))
+        lines = list(list(filter(lambda e: e!='', line)) for line in lines)
 
     x = list(int(line[1]) for line in lines if line[0].lower() == 'x')[0]
     y = list(int(line[1]) for line in lines if line[0].lower() == 'y')[0]
