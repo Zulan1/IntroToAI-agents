@@ -44,7 +44,7 @@ class Grid:
         #     self.nodes_colors = ["gray" for _ in range(len(self.nodes))]
         #     self.edges_colors = ["green" for _ in range(len(self.edges))]
 
-    def AddPackage(self, params: str):
+    def AddPackage(self, params: list[str]):
         """Adds a package to the grid
 
         Args:
