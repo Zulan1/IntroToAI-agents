@@ -29,13 +29,11 @@ class Grid:
             cmd (str): command used to update the grid
             params (list[str]): parameters to the command
         """
-
-        if cmd == UpdateGridType.BLOCK:
-            edge = ((int(params[0]), int(params[1])), (int(params[2]), int(params[3])))
+        edge = ((int(params[0]), int(params[1])), (int(params[2]), int(params[3])))
+        if cmd == UpdateGridType.BLOCK:            
             if edge in self.edges:
                 self.edges.remove(edge)
-        if cmd == UpdateGridType.FRAGILE:
-            edge = ((int(params[0]), int(params[1])), (int(params[2]), int(params[3])))
+        if cmd == UpdateGridType.FRAGILE:            
             self.fragEdges.add(edge)
         if cmd == UpdateGridType.PACKAGE:
             self.AddPackage(params)
