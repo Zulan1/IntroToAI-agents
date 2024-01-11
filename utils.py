@@ -1,10 +1,10 @@
 from grid import Grid, UpdateGridType
-from agent import AgentType
+from agent import Agent, AgentType
 from greedy_agent import GreedyAgent
 from human_agent import HumanAgent
 from interfering_agent import InterferingAgent
 
-def InitGrid(initFilePath: str) -> (list[list[str]]):
+def InitGrid(initFilePath: str) -> (Grid, list[Agent]):
     """initializes grid from init file
 
     Args:
@@ -31,11 +31,11 @@ def InitGrid(initFilePath: str) -> (list[list[str]]):
         agentType = line[0]
         if agentType not in AgentType: continue
         if agentType == AgentType.GREEDY:
-            agents.append(GreedyAgent(grid, line[1:]))
+            agents.append(GreedyAgent(line[1:]))
         if agentType == AgentType.HUMAN:
-            agents.append(HumanAgent(grid, line[1:]))
+            agents.append(HumanAgent(line[1:]))
         if agentType == AgentType.INTERFERING:
-            agents.append(InterferingAgent(grid, line[1:]))
+            agents.append(InterferingAgent(line[1:]))
 
 
-    return agents
+    return grid, agents
