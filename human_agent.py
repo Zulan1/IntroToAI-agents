@@ -5,7 +5,7 @@ from grid import Grid
 from agent import Agent
 from interfering_agent import InterferingAgent
 from greedy_agent import GreedyAgent
-from type_aliases import Node, Edge
+from type_aliases import Edge
 
 class HumanAgent(Agent):
     """class for Human Agent
@@ -15,15 +15,17 @@ class HumanAgent(Agent):
         super().__init__(params)
         self.init = False
         pos = nx.spring_layout(grid.graph)
-        fig, ax = plt.subplots(figsize=(16, 9))
+        _, ax = plt.subplots(figsize=(16, 9))
         self.pos = pos
         self.ax = ax
         self.done = True
         i_handle = mpatches.Patch(color='none', label='i = 0')
+        brown_handle = mpatches.Patch(color='brown', label='brown = Package')
+        green_handle = mpatches.Patch(color='green', label='green = Package Dropoff')
         blue_handle = mpatches.Patch(color='blue', label='blue = Greedy')
         orange_handle = mpatches.Patch(color='orange', label='orange = Human')
         red_handle = mpatches.Patch(color='red', label='red = Interfering')
-        self.handles = [i_handle, blue_handle, orange_handle, red_handle]
+        self.handles = [i_handle, brown_handle, green_handle, blue_handle, orange_handle, red_handle]
         self.legend = plt.legend(handles=self.handles)
         plt.ion()
         plt.show()
@@ -46,6 +48,8 @@ class HumanAgent(Agent):
                     color = 'red'
                 if type(agent) == GreedyAgent and agent.coordinates == node:
                     color = '#0000FF'
+                if hasattr(agent, 'packages') and node in agent.packages.keys():
+                    color = 'green'
             if node in grid.packages.keys():
                 color = 'brown'
             nodeColors.append(color)

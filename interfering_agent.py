@@ -1,10 +1,9 @@
 from agent import Agent
 from grid import Grid
 from type_aliases import Edge
-from utils import SearchMinPath
 
 class InterferingAgent(Agent):
-    """class for Interfering Agent
+    """Class for Interfering Agent
     """
 
     def __init__(self, params: list[str]):
@@ -20,6 +19,8 @@ class InterferingAgent(Agent):
         Returns:
             Edge: The edge the Interfering agent traverses in the next step.
         """
+        from utils import SearchMinPath
+
         actions = list(edge for edge in grid.fragEdges if edge[0] == self.coordinates)
         actions += list(edge[::-1] for edge in grid.fragEdges if edge[1] == self.coordinates)
         if actions != []:
@@ -30,7 +31,6 @@ class InterferingAgent(Agent):
             return action
         if self.seq == []:
             nodes = set(edge[0] for edge in grid.fragEdges).union(set(edge[1] for edge in grid.fragEdges))
-            print(f"frag: {grid.fragEdges}")
             if nodes == set():
                 self.done = True
                 return (self.coordinates, self.coordinates)

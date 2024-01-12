@@ -1,7 +1,6 @@
 import networkx as nx
 from grid import Grid, UpdateGridType
 from agent import Agent, AgentType
-# from greedy_agent import GreedyAgent
 from human_agent import HumanAgent
 from interfering_agent import InterferingAgent
 from greedy_agent import GreedyAgent
@@ -18,21 +17,21 @@ def InitGrid(initFilePath: str) -> (Grid, list[Agent]):
         list[Agent]: the agents activated in the simulator
     """
     with open(initFilePath, 'r') as f:
-        lines = list(line.split(';')[0].split('#')[1].strip().split(' ')
-                     for line in f.readlines() if line.startswith("#"))
-        lines = list(list(filter(lambda e: e!='', line)) for line in lines)
+        lines = list(line.split(';')[0].split('#')[1].strip().split(' ') # find all lines starting with '#' and cut them off on ';'
+                     for line in f.readlines() if line.startswith("#"))  # seperate the line to a list of words/tokens.
+        lines = list(list(filter(lambda e: e!='', line)) for line in lines) # filter empty words/tokens
 
-    x = list(int(line[1]) for line in lines if line[0].lower() == 'x')[0]
-    y = list(int(line[1]) for line in lines if line[0].lower() == 'y')[0]
+    x = list(int(line[1]) for line in lines if line[0].lower() == 'x')[0] # extract x max value from file
+    y = list(int(line[1]) for line in lines if line[0].lower() == 'y')[0] # extract y max value from file
     grid: Grid = Grid(x, y)
 
     for line in lines:
         action = line[0]
-        if any(action == updateGridType.value for updateGridType in UpdateGridType):
+        if any(action == updateGridType.value for updateGridType in UpdateGridType): # if action is of updating the grid type then call UpdateGrid
             grid.UpdateGrid(action, line[1:])
 
-    agents = []
-    for line in lines:
+    agents: list[Agent] = []
+    for line in lines: # build the agents specified in the file
         action = line[0]
         if not any(action == agentType.value for agentType in AgentType): continue
         if action == AgentType.GREEDY.value:
@@ -42,17 +41,38 @@ def InitGrid(initFilePath: str) -> (Grid, list[Agent]):
         if action == AgentType.INTERFERING.value:
             agents.append(InterferingAgent(line[1:]))
 
+    for agent in agents:
+        agent.ProcessStep(grid)
+
     return grid, agents
 
 def SearchMinPath(self, grid: Grid, nodes: list[Node]) -> list[Node]:
-        minPath = grid.graph.nodes()
-        for node in nodes:
-            path = nx.dijkstra_path(grid.graph, self.coordinates, node)
-            minPath = ComparePaths(minPath, path)
-        # print(f"minPath: {list(minPath)}")
-        return list(minPath)
+    """searches the shortest path between 1 start node and multiple target nodes
+
+    Args:
+        grid (Grid): the simulator's grid
+        nodes (list[Node]): a list of target nodes
+
+    Returns:
+        list[Node]: the shortest path to the closest target node
+    """
+    minPath = grid.graph.nodes()
+    for node in nodes:
+        path = nx.dijkstra_path(grid.graph, self.coordinates, node)
+        minPath = ComparePaths(minPath, path)
+    # print(f"minPath: {list(minPath)}")
+    return list(minPath)
     
 def ComparePaths(path0: list[Node], path1: list[Node]) -> list[Node]:
+    """Compares 2 paths and chooses the shortest path. chooses lower x value, and then y value in case of ties.
+
+    Args:
+        path0 (list[Node]): a path between 2 nodes
+        path1 (list[Node]): a different path between 2 nodes
+
+    Returns:
+        list[Node]: shortest path
+    """
     if len(path0) < len(path1):
         return path0
     if len(path0) > len(path1):

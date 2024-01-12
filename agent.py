@@ -26,12 +26,17 @@ class Agent(ABC):
 
     @abstractmethod
     def AgentStep(self, grid: Grid):
-        """do nothing
-        """
+        """abstract method. implemented differently in inherted classes."""
     
 
-    @abstractmethod
-    def ProcessStep(self, grid: Grid, action: Edge):
+    def ProcessStep(self, grid: Grid, action: Edge = None):
+        """Updates the state of the simulator's according to the step taken by the agent
+
+        Args:
+            grid (Grid): the simulator's grid
+            action (Edge, optional): the action taken. Defaults to None if no-op.
+        """
+        if action == None: return
         self._coordinates = action[1]     
         grid.UpdateGrid(UpdateGridType.ACTION.value, action)
 
@@ -39,8 +44,7 @@ class Agent(ABC):
     
     
 class AgentType(Enum):
-    """Agent Type Enum
-    """
+    """Agent Type Enum"""
     GREEDY = 'A'
     HUMAN = 'H'
     INTERFERING = 'I'

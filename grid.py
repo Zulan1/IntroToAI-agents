@@ -5,8 +5,7 @@ from package import Package
 from type_aliases import Node, Edge
 
 class Grid:
-    """Simulator's Grid
-    """
+    """Simulator's Grid"""
 
     def __init__(self, x: int , y: int):
         """Initiallizes connected grid with size x*y
@@ -15,10 +14,7 @@ class Grid:
             x (int): 1st dimension size
             y (int): 2nd dimension size
         """
-        self._size = (x + 1, y + 1)
-        # self.nodes = {(i, j) for i in range(x) for j in range(y)}
-        # self.edges = {((i, j), (i, j + 1)) for i in range(x) for j in range(y - 1)}
-        # self.edges += {((i, j), (i + 1, j)) for i in range(x - 1) for j in range(y)}
+        self._size: Tuple[int, int] = (x + 1, y + 1)
         nodes: set[Node] = {(i, j) for i in range(x + 1) for j in range(y + 1)}
         edges = {((i, j), (i, j + 1)) for i in range(x + 1) for j in range(y)}
         edges = edges.union({((i, j), (i + 1, j)) for i in range(x) for j in range(y + 1)})
@@ -26,10 +22,7 @@ class Grid:
         self._graph.add_nodes_from(nodes)
         self._graph.add_edges_from(edges)
         self._fragEdges: set[Edge] = set()
-        self._packages: dict = {}
-        # self.nodesColors = ["gray" for _ in range(len(self.nodes))]
-        # self.edgesColors = ["green" for _ in range(len(self.edges))]
-        # self.graph = nx.Graph()
+        self._packages: dict[Node, Package] = {}
 
     @property
     def size(self) -> Tuple[int, int]:
@@ -46,16 +39,16 @@ class Grid:
         """returns self.fragEdges
 
         Args:
-            set((int, int), (int, int)): the fragEdges in the grid
+            set(Edge): the fragEdges in the grid
         """
         return self._fragEdges
     
     @property
-    def packages(self) -> dict:
+    def packages(self) -> dict[Node, Package]:
         """returns self._packages
 
         Returns:
-            dict: {Node : Package}
+            dict: {Node: Package}
         """
         return self._packages
 
@@ -83,12 +76,6 @@ class Grid:
             self._fragEdges.add(edge)
         if cmd == UpdateGridType.PACKAGE.value:
             self.AddPackage(params)
-        # if self.size[0] != 0 and self.size[1] != 0:
-        #     self.nodes = [(i,j) for i in range(self.size[0]) for j in range(self.size[1])]
-        #     self.edges = [((i, j), (i, j + 1)) for i in range(self.size[0]) for j in range(self.size[1])]
-        #     self.edges += [((i, j), (i + 1, j)) for i in range(self.size[0]) for j in range(self.size[1])]
-        #     self.nodes_colors = ["gray" for _ in range(len(self.nodes))]
-        #     self.edges_colors = ["green" for _ in range(len(self.edges))]
 
     def AddPackage(self, params: list[str]):
         """Adds a package to the grid
@@ -97,10 +84,10 @@ class Grid:
             params (str): parameters of the package
         """
         package = Package(params)
-        coords = package.GetPickupLoc()
+        coords = package.pickupLoc
         self._packages[coords] = package
         
-    def PickPackage(self, coords: Node ,time : int) -> Package:
+    def PickPackage(self, coords: Node, time: int) -> Package:
         """Return a Package at the location if exists and appeard and delete from grid
 
         Args:
@@ -112,17 +99,23 @@ class Grid:
         package = None
         if coords in self._packages.keys():            
             package = self._packages[coords]
-            if package.GetPickupTime() > time:
+            if package.pickupTime > time:
                 package = None
             else:
                 del self._packages[coords]
         return package
     
-    def FilterAppearedPackages(self, time : int) -> dict:
-        appearedPackeges : dict = {}
-        for coords, pack in self._packages:
-            if pack.GetPickupTime() > time: continue
-            appearedPackeges[coords] = pack
+    def FilterAppearedPackages(self, time: int) -> dict[Package]:
+        """return all packages that are currently available
+
+        Args:
+            time (int): current time
+
+        Returns:
+            dict[Package]: Currently available packages
+        """
+        appearedPackeges: dict[Node, Package] = {coords: package for coords, package in self._packages.items()\
+            if package.pickupTime < time}
         return appearedPackeges
                 
             
@@ -130,91 +123,7 @@ class Grid:
 class UpdateGridType(Enum):
     """Enum for options to update grid.
     """
-    ACTION = 'A'
+    ACTION = 'ACT'
     BLOCK = 'B'
     FRAGILE = 'F'
     PACKAGE = 'P'
-
-    # def color_packages(self):
-    #     for p in self.packages:
-    #         match p.get_status():
-    #             case "not picked up":
-    #                 pass
-    #             case "picked up":
-    #                 pass
-    #             case "dropped off":
-    #                 pass
-    #             case _:
-    #                 print("Somthing went wrong")
-
-
-
-    # #Get Methods
-    # def get_size(self):
-    #     return self.size
-
-    # def get_nodes(self):
-    #     return self.nodes
-
-    # def get_edges(self):
-    #     return self.edges
-
-    # def get_nodes_colors(self):
-    #     return self.nodes_colors
-
-    # def get_edges_colors(self):
-    #     return self.edges_colors
-
-    # def get_package(self, package):
-    #     return self.packages
-
-    # #Set Methods
-    # def set_rows(self, rows):
-    #     self.size = (rows, self.size[1])
-    #     if self.size[1] != 0:
-    #         self.update_board()
-
-    # def set_cols(self, cols):
-    #     self.size = (self.size[0], cols)
-    #     if self.size[0] != 0:
-    #         self.update_board()
-
-    # def set_size(self, rows, cols):
-    #     self.size = (rows, cols)
-    #     self.update_board()
-
-    # def set_node_color(self, node, color):
-    #     if 0 <= node < len(self.nodes_colors):
-    #         self.nodes_colors[node] = color
-
-    # def set_edge_color(self, edge, color):
-    #     if edge in self.edges:
-    #         index = self.edges.index(edge)
-    #         self.edges_colors[index] = color
-    #     else:
-    #         print("Edge does not exist")
-
-    # def set_edge_color_code(self, edge, color_code):
-    #     if edge in self.edges:
-    #         index = self.edges.index(edge)
-    #         self.edges_colors[index] = edge_colors[color_code]
-    #     else:
-    #         print("Edge does not exist")
-
-    # #doesnt work
-    # def draw(self):
-    #     pos = {node: (node[1], -node[0]) for node in self.nodes}
-
-    #     # Draw nodes
-    #     nx.draw_networkx_nodes(self.graph, pos, node_color=self.nodes_colors, node_size=700)
-
-    #     # Draw edges
-    #     nx.draw_networkx_edges(self.graph, pos, edgelist=self.edges, edge_color=self.edges_colors)
-
-    #     # Draw labels (optional)
-    #     labels = {node: str(node) for node in self.nodes}
-    #     nx.draw_networkx_labels(self.graph, pos, labels)
-
-    #     # Display the plot
-    #     plt.show()
-        

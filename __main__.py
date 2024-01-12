@@ -23,14 +23,15 @@ def Main(argc: int, argv: list[str]):
     while any(agent.done is not True for agent in agents):
         st = time.time()
         for agent in agents:
-            if isinstance(agent, HumanAgent): 
-                action = agent.AgentStep(grid, agents, i)
-            elif isinstance(agent, GreedyAgent):
+            if isinstance(agent, GreedyAgent):
                 action = agent.AgentStep(grid, i)
+                agent.ProcessStep(grid, action, i)
             else:
-                action = agent.AgentStep(grid)
-                print(action)
-            agent.ProcessStep(grid, action)
+                if isinstance(agent, HumanAgent): 
+                    action = agent.AgentStep(grid, agents, i)
+                else:
+                    action = agent.AgentStep(grid)
+                agent.ProcessStep(grid, action)
         while time.time() - st < 2:
             pass
         i += 1
