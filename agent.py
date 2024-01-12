@@ -13,7 +13,7 @@ class Agent(ABC):
     def __init__(self, params: list[str]) -> None:
         self._coordinates: Node = (int(params[0]), int(params[1]))
         self.done = False
-        
+
 
     @property
     def coordinates(self) -> Node:
@@ -25,9 +25,8 @@ class Agent(ABC):
         return self._coordinates
 
     @abstractmethod
-    def AgentStep(self, grid: Grid):
+    def AgentStep(self, grid: Grid) -> Edge:
         """abstract method. implemented differently in inherted classes."""
-    
 
     def ProcessStep(self, grid: Grid, action: Edge = None):
         """Updates the state of the simulator's according to the step taken by the agent
@@ -41,8 +40,6 @@ class Agent(ABC):
         grid.UpdateGrid(UpdateGridType.ACTION.value, action)
 
 
-    
-    
 class AgentType(Enum):
     """Agent Type Enum"""
     GREEDY = 'A'

@@ -17,7 +17,7 @@ class Grid:
         self._size: Tuple[int, int] = (x + 1, y + 1)
         self._graph: nx.grid_2d_graph = nx.grid_2d_graph(x + 1, y + 1)
         self._fragEdges: set[Edge] = set()
-        self._packages: dict[Node, Package] = {}
+        self._packages: dict[Node, set[Package]] = {}
 
     @property
     def size(self) -> Tuple[int, int]:
@@ -37,7 +37,7 @@ class Grid:
             set(Edge): the fragEdges in the grid
         """
         return self._fragEdges
-    
+
     @property
     def packages(self) -> dict[Node, Package]:
         """returns self._packages
@@ -61,7 +61,7 @@ class Grid:
             if params[::-1] in self._fragEdges:
                 self._graph.remove_edge(*params[::-1])
                 self._fragEdges.remove(params[::-1])
-                
+
         if cmd == UpdateGridType.BLOCK.value:
             edge = ((int(params[0]), int(params[1])), (int(params[2]), int(params[3])))
             if edge in self.graph.edges():
@@ -80,9 +80,9 @@ class Grid:
         """
         package = Package(params)
         coords = package.pickupLoc
-        self._packages[coords] = package
-        
-    def PickPackage(self, coords: Node, time: int) -> Package:
+        self._packages[coords] = self._packages.get(coords, set()).union({package})
+
+    def PickPackagesFromNode(self, coords: Node, time: int) -> set[Package]:
         """Return a Package at the location if exists and appeard and delete from grid
 
         Args:
@@ -91,15 +91,15 @@ class Grid:
         Returns:
             Package: Package at the location if exists otherwise None
         """
-        package = None
-        if coords in self._packages.keys():            
-            package = self._packages[coords]
-            if package.pickupTime > time:
-                package = None
-            else:
-                del self._packages[coords]
-        return package
-    
+        packages = set()
+        for package in self._packages.get(coords, set()).copy():
+            if package.pickupTime <= time:
+                packages.add(package)
+                self._packages[coords].remove(package)
+                if not self._packages[coords]:
+                    del self._packages[coords]
+        return packages
+
     def FilterAppearedPackages(self, time: int) -> dict[Package]:
         """return all packages that are currently available
 
@@ -109,17 +109,24 @@ class Grid:
         Returns:
             dict[Package]: Currently available packages
         """
-        appearedPackeges: dict[Node, Package] =\
-            {coords: package for coords, package in self._packages.items() if package.pickupTime <= time}
+        appearedPackeges: dict[Node, Package] = {coords:\
+            {package for package in packages if package.pickupTime <= time}\
+                for coords, packages in self._packages.items()}
+        appearedPackeges = {coords: packages for coords, packages in appearedPackeges.items() if packages != set()}
         return appearedPackeges
 
     def EarliestPackage(self) -> Node:
+        """Returns the node of the package that arrives the earliest
+
+        Returns:
+            Node: The node of the earliest package
+        """
         earliest = (None, None)
-        for node, package in self._packages.items():
-            if earliest != (None, None) and package.pickupTime >= earliest[1]: continue
-            earliest = (node, package.pickupTime)
+        for node, packages in self._packages.items():
+            for package in packages:
+                if earliest != (None, None) and package.pickupTime >= earliest[1]: continue
+                earliest = (node, package.pickupTime)
         return earliest[0]
-                
 
 class UpdateGridType(Enum):
     """Enum for options to update grid.

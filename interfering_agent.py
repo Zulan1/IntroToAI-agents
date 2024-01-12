@@ -20,6 +20,7 @@ class InterferingAgent(Agent):
             Edge: The edge the Interfering agent traverses in the next step.
         """
         from utils import SearchMinPath
+        super().AgentStep(grid)
 
         actions = list(edge for edge in grid.fragEdges if edge[0] == self.coordinates)
         actions += list(edge[::-1] for edge in grid.fragEdges if edge[1] == self.coordinates)
