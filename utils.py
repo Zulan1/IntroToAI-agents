@@ -56,11 +56,10 @@ def SearchMinPath(self, grid: Grid, nodes: list[Node]) -> list[Node]:
     Returns:
         list[Node]: the shortest path to the closest target node
     """
-    minPath = grid.graph.nodes()
+    minPath = None
     for node in nodes:
         path = nx.dijkstra_path(grid.graph, self.coordinates, node)
         minPath = ComparePaths(minPath, path)
-    # print(f"minPath: {list(minPath)}")
     return list(minPath)
     
 def ComparePaths(path0: list[Node], path1: list[Node]) -> list[Node]:
@@ -73,6 +72,10 @@ def ComparePaths(path0: list[Node], path1: list[Node]) -> list[Node]:
     Returns:
         list[Node]: shortest path
     """
+    if path0 == None:
+        return path1
+    if path1 == None:
+        return path0
     if len(path0) < len(path1):
         return path0
     if len(path0) > len(path1):

@@ -9,8 +9,8 @@ class GreedyAgent(Agent):
 
     def __init__(self, params: list[str]):
         super().__init__(params)
-        self._packages : dict[Node, Package] = {}
-        self._seq = []
+        self._packages: dict[Node, Package] = {}
+        self.seq = []
        
     @property
     def packages(self) -> list[Package]:
@@ -41,18 +41,22 @@ class GreedyAgent(Agent):
         from utils import SearchMinPath
 
         if self._packages == {}:            
-            if self._seq == []:
-                nodes = grid.FilterAppearedPackages(time) # goal
-                nodesAndFutureNodes = grid.packages.keys()
-                if nodesAndFutureNodes == {}:
+            if self.seq == []:
+                nodes = list(grid.FilterAppearedPackages(time).keys()) # goal
+                nodesAndFutureNodes = list(grid.packages.keys())
+                if nodesAndFutureNodes == []:
                     self.done = True
                     return (self.coordinates, self.coordinates)
-                self._seq = SearchMinPath(self, grid, nodes) # problem + search
-        elif self._seq == []:
+                if nodes == []:
+                    earliestPack = grid.EarliestPackage()
+                    self.seq = SearchMinPath(self, grid, [earliestPack])[1:]
+                else:
+                    self.seq = SearchMinPath(self, grid, nodes)[1:] # problem + search
+        elif self.seq == []:
             nodes = list(self._packages.keys()) # goal
-            self._seq = SearchMinPath(self, grid, nodes) # problem + search
-        action: Edge = (self.coordinates, self._seq[0])
-        self._seq = self._seq[1:]
+            self.seq = SearchMinPath(self, grid, nodes)[1:] # problem + search
+        action: Edge = (self.coordinates, self.seq[0])
+        self.seq = self.seq[1:]
         return action
     
     def ProcessStep(self, grid: Grid, action: Edge = None, time: int = 0):
