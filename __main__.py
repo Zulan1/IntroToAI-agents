@@ -2,9 +2,8 @@ import sys
 import time
 from os import path
 from agent import Agent
-from human_agent import HumanAgent
 from grid import Grid
-from utils import InitGrid
+from utils import InitGrid, HumanAgent, InterferingAgent, GreedyAgent
 
 def Main(argc: int, argv: list[str]):
     """Main function of the project
@@ -24,8 +23,10 @@ def Main(argc: int, argv: list[str]):
     while any(agent.done is not True for agent in agents):
         st = time.time()
         for agent in agents:
-            if type(agent) == HumanAgent:
+            if isinstance(agent, HumanAgent): 
                 action = agent.AgentStep(grid, agents, i)
+            elif isinstance(agent, GreedyAgent):
+                action = agent.AgentStep(grid, i)
             else:
                 action = agent.AgentStep(grid)
                 print(action)

@@ -6,6 +6,6 @@
 #B 3 0 4 0          ; Edge from (3,0) to (4,0) is always blocked
 #B 2 2 2 3          ; Edge from (2,2) to (2,3) is always blocked
 #F 0 0 0 1          ; Edge from (0,0) to (0,1) is fragile (can only be traversed once)
-;#A 0 0              ; Normal agent starts at (0,0)
+#A 0 0              ; Normal agent starts at (0,0)
 #H 4 3              ; "Human" agent (see below)  starts at (4,3)
 #I 1 1              ; Interfering agent (see below) starts at (1,1)

@@ -4,7 +4,7 @@ import networkx as nx
 from grid import Grid
 from agent import Agent
 from interfering_agent import InterferingAgent
-# from greedy_agent import GreedyAgent
+from greedy_agent import GreedyAgent
 from type_aliases import Node, Edge
 
 class HumanAgent(Agent):
@@ -44,8 +44,10 @@ class HumanAgent(Agent):
                     color = 'orange'
                 if type(agent) == InterferingAgent and agent.coordinates == node:
                     color = 'red'
-                # if type(agent) == GreedyAgent and agent.coordinates == node:
-                #     color = '#0000FF'
+                if type(agent) == GreedyAgent and agent.coordinates == node:
+                    color = '#0000FF'
+            if node in grid.packages.keys():
+                color = 'brown'
             nodeColors.append(color)
         nx.draw(grid.graph, self.pos, with_labels = True, node_size=300, ax=self.ax, node_color=nodeColors)
         nx.draw_networkx_edges(grid.graph, self.pos, width=2, edge_color=edgeColors, ax=self.ax)

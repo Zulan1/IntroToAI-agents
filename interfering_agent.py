@@ -1,7 +1,7 @@
-import networkx as nx
 from agent import Agent
 from grid import Grid
-from type_aliases import Node, Edge
+from type_aliases import Edge
+from utils import SearchMinPath
 
 class InterferingAgent(Agent):
     """class for Interfering Agent
@@ -34,35 +34,14 @@ class InterferingAgent(Agent):
             if nodes == set():
                 self.done = True
                 return (self.coordinates, self.coordinates)
-            self.seq = self.Search(grid, nodes)
+            self.seq = SearchMinPath(self, grid, nodes)
         action: Edge = (self.coordinates, self.seq[0])
         self.seq = self.seq[1:]
         return action
 
 
-    def Search(self, grid: Grid, nodes: list[Node]) -> list[Node]:
-        minPath = grid.graph.nodes()
-        for node in nodes:
-            path = nx.dijkstra_path(grid.graph, self.coordinates, node)
-            minPath = self.ComparePaths(minPath, path)
-        # print(f"minPath: {list(minPath)}")
-        return list(minPath)
+    
 
 
 
-    def ComparePaths(self, path0: list[Node], path1: list[Node]) -> list[Node]:
-        if len(path0) < len(path1):
-            return path0
-        if len(path0) > len(path1):
-            return path1
-        if len(path0) == len(path1):
-            dest0x, dest0y = path0[-1]
-            dest1x, dest1y = path1[-1]
-            if dest0x < dest1x:
-                return path0
-            if dest0x > dest1x:
-                return path1
-            if dest0y < dest1y:
-                return path0
-            if dest0y > dest1y:
-                return path1
+

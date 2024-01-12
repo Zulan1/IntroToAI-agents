@@ -1,8 +1,11 @@
+import networkx as nx
 from grid import Grid, UpdateGridType
 from agent import Agent, AgentType
 # from greedy_agent import GreedyAgent
 from human_agent import HumanAgent
 from interfering_agent import InterferingAgent
+from greedy_agent import GreedyAgent
+from type_aliases import Node
 
 def InitGrid(initFilePath: str) -> (Grid, list[Agent]):
     """initializes grid from init file
@@ -28,15 +31,38 @@ def InitGrid(initFilePath: str) -> (Grid, list[Agent]):
         if any(action == updateGridType.value for updateGridType in UpdateGridType):
             grid.UpdateGrid(action, line[1:])
 
-    agents = list()
+    agents = []
     for line in lines:
         action = line[0]
         if not any(action == agentType.value for agentType in AgentType): continue
-        # if action == AgentType.GREEDY.value:
-        #     agents.append(GreedyAgent(line[1:]))
+        if action == AgentType.GREEDY.value:
+            agents.append(GreedyAgent(line[1:]))
         if action == AgentType.HUMAN.value:
             agents.append(HumanAgent(line[1:], grid))
         if action == AgentType.INTERFERING.value:
             agents.append(InterferingAgent(line[1:]))
 
     return grid, agents
+
+def SearchMinPath(self, grid: Grid, nodes: list[Node]) -> list[Node]:
+        minPath = grid.graph.nodes()
+        for node in nodes:
+            path = nx.dijkstra_path(grid.graph, self.coordinates, node)
+            minPath = ComparePaths(minPath, path)
+        # print(f"minPath: {list(minPath)}")
+        return list(minPath)
+    
+def ComparePaths(path0: list[Node], path1: list[Node]) -> list[Node]:
+    if len(path0) < len(path1):
+        return path0
+    if len(path0) > len(path1):
+        return path1        
+    dest0x, dest0y = path0[-1]
+    dest1x, dest1y = path1[-1]
+    if dest0x < dest1x:
+        return path0
+    if dest0x > dest1x:
+        return path1
+    if dest0y < dest1y:
+        return path0
+    return path1

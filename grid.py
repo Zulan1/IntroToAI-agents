@@ -26,7 +26,7 @@ class Grid:
         self._graph.add_nodes_from(nodes)
         self._graph.add_edges_from(edges)
         self._fragEdges: set[Edge] = set()
-        self.packages: list = []
+        self._packages: dict = {}
         # self.nodesColors = ["gray" for _ in range(len(self.nodes))]
         # self.edgesColors = ["green" for _ in range(len(self.edges))]
         # self.graph = nx.Graph()
@@ -49,6 +49,15 @@ class Grid:
             set((int, int), (int, int)): the fragEdges in the grid
         """
         return self._fragEdges
+    
+    @property
+    def packages(self) -> dict:
+        """returns self._packages
+
+        Returns:
+            dict: {Node : Package}
+        """
+        return self._packages
 
     def UpdateGrid(self, cmd: str, params: list[str] | Edge) -> None:
         """Updates grid
@@ -88,7 +97,35 @@ class Grid:
             params (str): parameters of the package
         """
         package = Package(params)
-        self.packages.append(package)
+        coords = package.GetPickupLoc()
+        self._packages[coords] = package
+        
+    def PickPackage(self, coords: Node ,time : int) -> Package:
+        """Return a Package at the location if exists and appeard and delete from grid
+
+        Args:
+            coords (Node): check if in these coords there is a package
+
+        Returns:
+            Package: Package at the location if exists otherwise None
+        """
+        package = None
+        if coords in self._packages.keys():            
+            package = self._packages[coords]
+            if package.GetPickupTime() > time:
+                package = None
+            else:
+                del self._packages[coords]
+        return package
+    
+    def FilterAppearedPackages(self, time : int) -> dict:
+        appearedPackeges : dict = {}
+        for coords, pack in self._packages:
+            if pack.GetPickupTime() > time: continue
+            appearedPackeges[coords] = pack
+        return appearedPackeges
+                
+            
 
 class UpdateGridType(Enum):
     """Enum for options to update grid.

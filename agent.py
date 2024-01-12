@@ -1,6 +1,5 @@
-from abc import ABC, abstractmethod
 from enum import Enum
-from typing import Any
+from abc import ABC, abstractmethod
 from grid import Grid, UpdateGridType
 from type_aliases import Node, Edge
 
@@ -14,6 +13,7 @@ class Agent(ABC):
     def __init__(self, params: list[str]) -> None:
         self._coordinates: Node = (int(params[0]), int(params[1]))
         self.done = False
+        
 
     @property
     def coordinates(self) -> Node:
@@ -29,10 +29,15 @@ class Agent(ABC):
         """do nothing
         """
     
+
+    @abstractmethod
     def ProcessStep(self, grid: Grid, action: Edge):
-        self._coordinates = action[1]
+        self._coordinates = action[1]     
         grid.UpdateGrid(UpdateGridType.ACTION.value, action)
 
+
+    
+    
 class AgentType(Enum):
     """Agent Type Enum
     """
