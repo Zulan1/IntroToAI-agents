@@ -15,12 +15,7 @@ class Grid:
             y (int): 2nd dimension size
         """
         self._size: Tuple[int, int] = (x + 1, y + 1)
-        nodes: set[Node] = {(i, j) for i in range(x + 1) for j in range(y + 1)}
-        edges = {((i, j), (i, j + 1)) for i in range(x + 1) for j in range(y)}
-        edges = edges.union({((i, j), (i + 1, j)) for i in range(x) for j in range(y + 1)})
-        self._graph: nx.Graph = nx.Graph()
-        self._graph.add_nodes_from(nodes)
-        self._graph.add_edges_from(edges)
+        self._graph: nx.grid_2d_graph = nx.grid_2d_graph(x + 1, y + 1)
         self._fragEdges: set[Edge] = set()
         self._packages: dict[Node, Package] = {}
 
@@ -114,11 +109,17 @@ class Grid:
         Returns:
             dict[Package]: Currently available packages
         """
-        appearedPackeges: dict[Node, Package] = {coords: package for coords, package in self._packages.items()\
-            if package.pickupTime < time}
+        appearedPackeges: dict[Node, Package] =\
+            {coords: package for coords, package in self._packages.items() if package.pickupTime <= time}
         return appearedPackeges
+
+    def EarliestPackage(self) -> Node:
+        earliest = (None, None)
+        for node, package in self._packages.items():
+            if earliest != (None, None) and package.pickupTime >= earliest[1]: continue
+            earliest = (node, package.pickupTime)
+        return earliest[0]
                 
-            
 
 class UpdateGridType(Enum):
     """Enum for options to update grid.
