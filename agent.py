@@ -1,5 +1,8 @@
 from abc import ABC, abstractmethod
 from enum import Enum
+from typing import Any
+from grid import Grid, UpdateGridType
+from type_aliases import Node, Edge
 
 class Agent(ABC):
     """abstract class for agents
@@ -9,22 +12,27 @@ class Agent(ABC):
     """
 
     def __init__(self, params: list[str]) -> None:
-        self.startCoords: (int, int) = (params[0], params[1])
-    
+        self._coordinates: Node = (int(params[0]), int(params[1]))
+        self.done = False
+
+    @property
+    def coordinates(self) -> Node:
+        """return the coordinates property
+
+        Returns:
+            Node: The start Coordinates of the Human Agent.
+        """
+        return self._coordinates
+
     @abstractmethod
-    def AgentStep(self):
+    def AgentStep(self, grid: Grid):
         """do nothing
         """
     
-    @property
-    def startCoords(self) -> (int, int):
-        """return the startCoords property
+    def ProcessStep(self, grid: Grid, action: Edge):
+        self._coordinates = action[1]
+        grid.UpdateGrid(UpdateGridType.ACTION.value, action)
 
-        Returns:
-            (int, int): The start Coordinates of the Human Agent.
-        """
-        return self.startCoords
-    
 class AgentType(Enum):
     """Agent Type Enum
     """
