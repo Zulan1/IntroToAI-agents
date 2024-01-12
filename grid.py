@@ -1,5 +1,8 @@
 from enum import Enum
+from typing import Tuple
+import networkx as nx
 from package import Package
+from type_aliases import Node, Edge
 
 class Grid:
     """Simulator's Grid
@@ -12,30 +15,64 @@ class Grid:
             x (int): 1st dimension size
             y (int): 2nd dimension size
         """
-        self.size = (x, y)
-        self.nodes = {(i, j) for i in range(x) for j in range(y)}
-        self.edges = {((i, j), (i, j + 1)) for i in range(x) for j in range(y - 1)}
-        self.edges += {((i, j), (i + 1, j)) for i in range(x - 1) for j in range(y)}
-        self.fragEdges = set()
+        self._size = (x + 1, y + 1)
+        # self.nodes = {(i, j) for i in range(x) for j in range(y)}
+        # self.edges = {((i, j), (i, j + 1)) for i in range(x) for j in range(y - 1)}
+        # self.edges += {((i, j), (i + 1, j)) for i in range(x - 1) for j in range(y)}
+        nodes: set[Node] = {(i, j) for i in range(x + 1) for j in range(y + 1)}
+        edges = {((i, j), (i, j + 1)) for i in range(x + 1) for j in range(y)}
+        edges = edges.union({((i, j), (i + 1, j)) for i in range(x) for j in range(y + 1)})
+        self._graph: nx.Graph = nx.Graph()
+        self._graph.add_nodes_from(nodes)
+        self._graph.add_edges_from(edges)
+        self._fragEdges: set[Edge] = set()
+        self.packages: list = []
         # self.nodesColors = ["gray" for _ in range(len(self.nodes))]
         # self.edgesColors = ["green" for _ in range(len(self.edges))]
         # self.graph = nx.Graph()
-        self.packages = []
 
-    def UpdateGrid(self, cmd: str, params: list[str]):
+    @property
+    def size(self) -> Tuple[int, int]:
+        """Returns the size of the grid"""
+        return self._size
+
+    @property
+    def graph(self) -> nx.Graph:
+        """Returns the networkx graph object"""
+        return self._graph
+
+    @property
+    def fragEdges(self) -> set[Edge]:
+        """returns self.fragEdges
+
+        Args:
+            set((int, int), (int, int)): the fragEdges in the grid
+        """
+        return self._fragEdges
+
+    def UpdateGrid(self, cmd: str, params: list[str] | Edge) -> None:
         """Updates grid
 
         Args:
             cmd (str): command used to update the grid
             params (list[str]): parameters to the command
         """
-        edge = ((int(params[0]), int(params[1])), (int(params[2]), int(params[3])))
-        if cmd == UpdateGridType.BLOCK:            
-            if edge in self.edges:
-                self.edges.remove(edge)
-        if cmd == UpdateGridType.FRAGILE:            
-            self.fragEdges.add(edge)
-        if cmd == UpdateGridType.PACKAGE:
+        if cmd == UpdateGridType.ACTION.value:            
+            if params in self._fragEdges:
+                self._graph.remove_edge(*params)
+                self._fragEdges.remove(params)
+            if params[::-1] in self._fragEdges:
+                self._graph.remove_edge(*params[::-1])
+                self._fragEdges.remove(params[::-1])
+                
+        if cmd == UpdateGridType.BLOCK.value:
+            edge = ((int(params[0]), int(params[1])), (int(params[2]), int(params[3])))
+            if edge in self.graph.edges():
+                self.graph.remove_edge(*edge)
+        if cmd == UpdateGridType.FRAGILE.value:
+            edge = ((int(params[0]), int(params[1])), (int(params[2]), int(params[3])))
+            self._fragEdges.add(edge)
+        if cmd == UpdateGridType.PACKAGE.value:
             self.AddPackage(params)
         # if self.size[0] != 0 and self.size[1] != 0:
         #     self.nodes = [(i,j) for i in range(self.size[0]) for j in range(self.size[1])]
@@ -56,6 +93,7 @@ class Grid:
 class UpdateGridType(Enum):
     """Enum for options to update grid.
     """
+    ACTION = 'A'
     BLOCK = 'B'
     FRAGILE = 'F'
     PACKAGE = 'P'
