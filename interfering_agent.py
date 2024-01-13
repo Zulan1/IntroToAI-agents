@@ -39,10 +39,3 @@ class InterferingAgent(Agent):
         action: Edge = (self.coordinates, self.seq[0])
         self.seq = self.seq[1:]
         return action
-
-
-    
-
-
-
-

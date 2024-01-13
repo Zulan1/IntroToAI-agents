@@ -17,7 +17,8 @@ def InitGrid(initFilePath: str) -> (Grid, list[Agent]):
         list[Agent]: the agents activated in the simulator
     """
     with open(initFilePath, 'r') as f:
-        lines = list(line.split(';')[0].split('#')[1].strip().split(' ') # find all lines starting with '#' and cut them off on ';'
+        # find all lines starting with '#' and cut them off on ';'
+        lines = list(line.split(';')[0].split('#')[1].strip().split(' ')
                      for line in f.readlines() if line.startswith("#"))  # seperate the line to a list of words/tokens.
         lines = list(list(filter(lambda e: e!='', line)) for line in lines) # filter empty words/tokens
 
@@ -27,7 +28,8 @@ def InitGrid(initFilePath: str) -> (Grid, list[Agent]):
 
     for line in lines:
         action = line[0]
-        if any(action == updateGridType.value for updateGridType in UpdateGridType): # if action is of updating the grid type then call UpdateGrid
+        # if action is of updating the grid type then call UpdateGrid
+        if any(action == updateGridType.value for updateGridType in UpdateGridType):
             grid.UpdateGrid(action, line[1:])
 
     agents: list[Agent] = []
@@ -61,7 +63,7 @@ def SearchMinPath(self, grid: Grid, nodes: list[Node]) -> list[Node]:
         path = nx.dijkstra_path(grid.graph, self.coordinates, node)
         minPath = ComparePaths(minPath, path)
     return list(minPath)
-    
+
 def ComparePaths(path0: list[Node], path1: list[Node]) -> list[Node]:
     """Compares 2 paths and chooses the shortest path. chooses lower x value, and then y value in case of ties.
 
@@ -72,9 +74,9 @@ def ComparePaths(path0: list[Node], path1: list[Node]) -> list[Node]:
     Returns:
         list[Node]: shortest path
     """
-    if path0 == None:
+    if path0 is None:
         return path1
-    if path1 == None:
+    if path1 is None:
         return path0
     if len(path0) < len(path1):
         return path0

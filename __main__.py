@@ -3,7 +3,7 @@ import time
 from os import path
 from agent import Agent
 from grid import Grid
-from utils import InitGrid, HumanAgent, InterferingAgent, GreedyAgent
+from utils import InitGrid, HumanAgent, GreedyAgent
 
 def Main(argc: int, argv: list[str]):
     """Main function of the project
@@ -27,7 +27,7 @@ def Main(argc: int, argv: list[str]):
                 action = agent.AgentStep(grid, i)
                 agent.ProcessStep(grid, action, i)
             else:
-                if isinstance(agent, HumanAgent): 
+                if isinstance(agent, HumanAgent):
                     action = agent.AgentStep(grid, agents, i)
                 else:
                     action = agent.AgentStep(grid)

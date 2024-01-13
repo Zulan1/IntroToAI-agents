@@ -7,7 +7,7 @@ class Agent(ABC):
     """abstract class for agents
 
     Args:
-        ABC (_type_): abstract inheritor
+        ABC: inherits from abstract class
     """
 
     def __init__(self, params: list[str]) -> None:
@@ -35,8 +35,8 @@ class Agent(ABC):
             grid (Grid): the simulator's grid
             action (Edge, optional): the action taken. Defaults to None if no-op.
         """
-        if action == None: return
-        self._coordinates = action[1]     
+        if action is None: return
+        self._coordinates = action[1]
         grid.UpdateGrid(UpdateGridType.ACTION.value, action)
 
 

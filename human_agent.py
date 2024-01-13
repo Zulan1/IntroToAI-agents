@@ -15,16 +15,16 @@ class HumanAgent(Agent):
         super().__init__(params)
         self.init = False
         _, ax = plt.subplots(figsize=(16, 9))
-        self.pos = {(x, y): (y, -x) for x, y in grid.graph.nodes()}
+        self.pos = {(x, y): (x, -y) for x, y in grid.graph.nodes()}
         self.ax = ax
         self.done = True
         iHandle = mpatches.Patch(color='none', label='i = 0')
         brownHandle = mpatches.Patch(color='brown', label='brown = Pickup')
         greenHandle = mpatches.Patch(color='green', label='green = Dropoff')
         blueHandle = mpatches.Patch(color='blue', label='blue = Greedy')
-        orangeHandle = mpatches.Patch(color='orange', label='orange = Human')
         redHandle = mpatches.Patch(color='red', label='red = Interfering')
-        self.handles = [iHandle, brownHandle, greenHandle, blueHandle, orangeHandle, redHandle]
+        orangeHandle = mpatches.Patch(color='orange', label='orange = Human')
+        self.handles = [iHandle, brownHandle, greenHandle, blueHandle, redHandle, orangeHandle]
         self.legend = plt.legend(handles=self.handles)
         plt.ion()
         plt.show()
@@ -44,7 +44,7 @@ class HumanAgent(Agent):
             if node in grid.packages.keys():
                 color = 'brown'
             for agent in agents:
-                if hasattr(agent, 'packages') and node in agent.packages.keys():
+                if hasattr(agent, 'packages') and node in agent.packages:
                     color = 'green'
                 if isinstance(agent, HumanAgent) and agent.coordinates == node:
                     color = 'orange'
@@ -52,8 +52,8 @@ class HumanAgent(Agent):
                     color = 'red'
                 if isinstance(agent, GreedyAgent) and agent.coordinates == node:
                     color = '#0000FF'
-
             nodeColors.append(color)
+
         nx.draw(grid.graph, self.pos, with_labels = True, node_size=1000, ax=self.ax, node_color=nodeColors)
         nx.draw_networkx_edges(grid.graph, self.pos, width=2, edge_color=edgeColors, ax=self.ax)
         iHandle = mpatches.Patch(color='none', label=f'i = {i}')
@@ -62,5 +62,5 @@ class HumanAgent(Agent):
         plt.legend(handles=self.handles, loc = (-0.16, 0.85), fontsize=16)
         plt.draw()
         plt.pause(0.1)
-        
+
         return (self.coordinates, self.coordinates)
