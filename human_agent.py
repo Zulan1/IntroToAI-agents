@@ -29,6 +29,17 @@ class HumanAgent(Agent):
         plt.ion()
         plt.show()
 
+    def drawMultiColoredNode(self, node, colors):
+        numColors = len(colors)
+        for i, color in enumerate(colors):
+            # Calculate the angles for the wedge
+            theta1 = 90 + 360 * i / numColors
+            theta2 = 90 + 360 * (i + 1) / numColors
+
+            # Draw the wedge
+            wedge = mpatches.Wedge(center=self.pos[node], r=0.1, theta1=theta1, theta2=theta2, color=color)
+            self.ax.add_patch(wedge)
+
     def AgentStep(self, grid: Grid, agents: list[Agent], i: int) -> Edge:
         """Animates the state of the grid
 
@@ -36,26 +47,33 @@ class HumanAgent(Agent):
             Edge: The next edge the Human agent traverses in the next step.
         """
         super().AgentStep(grid)
+
         self.ax.clear()
         edgeColors = ['red' if e in grid.fragEdges or e[::-1] in grid.fragEdges else 'gray' for e in grid.graph.edges()]
-        nodeColors = []
+        nx.draw_networkx_edges(grid.graph, self.pos, width=2, edge_color=edgeColors, ax=self.ax)
+        # nodeColors = []
         for node in grid.graph.nodes():
-            color = '#069AF3'
+            color: set[str] = set()
             if node in grid.packages.keys():
-                color = 'brown'
+                color.add('brown')
             for agent in agents:
                 if hasattr(agent, 'packages') and node in agent.packages:
-                    color = 'green'
+                    color.add('green')
                 if isinstance(agent, HumanAgent) and agent.coordinates == node:
-                    color = 'orange'
+                    color.add('orange')
                 if isinstance(agent, InterferingAgent) and agent.coordinates == node:
-                    color = 'red'
+                    color.add('red')
                 if isinstance(agent, GreedyAgent) and agent.coordinates == node:
-                    color = '#0000FF'
-            nodeColors.append(color)
+                    color.add('#0000FF')
+            if not color:
+                color.add('#069AF3')
+            self.drawMultiColoredNode(node, color)
+            # nodeColors.append(color)
 
-        nx.draw(grid.graph, self.pos, with_labels = True, node_size=1000, ax=self.ax, node_color=nodeColors)
-        nx.draw_networkx_edges(grid.graph, self.pos, width=2, edge_color=edgeColors, ax=self.ax)
+        nx.draw_networkx_labels(grid.graph, self.pos)
+        #nx.draw(grid.graph, self.pos, with_labels = True, node_size=1000, ax=self.ax)
+        # for j, node in enumerate(grid.graph.nodes()):
+        #     self.drawMultiColoredNode(node, nodeColors[j])
         iHandle = mpatches.Patch(color='none', label=f'i = {i}')
         self.handles[0] = iHandle
         self.legend.remove()
