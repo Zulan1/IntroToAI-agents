@@ -40,14 +40,14 @@ class GreedyAgent(Agent):
         """
         from utils import SearchMinPath
         super().AgentStep(grid)
-
+        noOp = (self._coordinates, self._coordinates)
         if not self._packages:
             if self.seq == []:
                 nodes = list(grid.FilterAppearedPackages(time).keys()) # goal
                 nodesAndFutureNodes = list(grid.packages.keys())
                 if not nodesAndFutureNodes:
                     self.done = True
-                    return (self.coordinates, self.coordinates)
+                    return noOp
                 if not nodes:
                     earliestPack = grid.EarliestPackage()
                     self.seq = SearchMinPath(self, grid, [earliestPack])[1:]
@@ -56,7 +56,10 @@ class GreedyAgent(Agent):
         elif not self.seq:
             nodes = list(self._packages.keys()) # goal
             self.seq = SearchMinPath(self, grid, nodes)[1:] # problem + search
-        action: Edge = (self.coordinates, self.seq[0])
+
+        if not self.seq:
+            return noOp
+        action: Edge = (self._coordinates, self.seq[0])
         if action not in grid.graph.edges() and action[::-1] not in grid.graph.edges():
             self.seq = []
             return self.AgentStep(grid,time)
