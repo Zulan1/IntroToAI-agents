@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
+from matplotlib.widgets import Button
 import networkx as nx
 from grid import Grid
 from agent import Agent
@@ -14,10 +15,23 @@ class HumanAgent(Agent):
     def __init__(self, params:list[str], grid: Grid):
         super().__init__(params)
         self.init = False
-        _, ax = plt.subplots(figsize=(16, 9))
-        self.pos = {(x, y): (x, -y) for x, y in grid.graph.nodes()}
+        fig, ax = plt.subplots(figsize=(16, 9))
         self.ax = ax
+        self.pos = {(x, y): (x, -y) for x, y in grid.graph.nodes()}
         self.done = True
+        self.paused = True
+        conButtonAx = fig.add_axes([0, 0.175, 0.1, 0.1], aspect='equal', frameon=False)  # x, y, width, height
+        exitButtonAx = fig.add_axes([0, 0.05, 0.1, 0.1], aspect='equal', frameon=False)  # x, y, width, height
+        conCircle = mpatches.Circle((0.5, 0.5), 0.5, color='red', transform=conButtonAx.transAxes)
+        exitCircle = mpatches.Circle((0.5, 0.5), 0.5, color='red', transform=exitButtonAx.transAxes)
+        conButtonAx.add_patch(conCircle)
+        exitButtonAx.add_patch(exitCircle)
+        self.conButton = Button(conButtonAx, 'Continue', color='none', hovercolor='none')
+        self.exitButton = Button(exitButtonAx, 'Exit', color='none', hovercolor='none')
+        self.conButton.label.set_color('white')
+        self.conButton.label.set_fontsize(14)
+        self.exitButton.label.set_color('white')
+        self.exitButton.label.set_fontsize(14)
         iHandle = mpatches.Patch(color='none', label='i = 0')
         brownHandle = mpatches.Patch(color='brown', label='brown = Pickup')
         greenHandle = mpatches.Patch(color='green', label='green = Dropoff')
@@ -46,6 +60,14 @@ class HumanAgent(Agent):
             wedge = mpatches.Wedge(center=self.pos[node], r=0.1, theta1=theta1, theta2=theta2, color=color)
             self.ax.add_patch(wedge)
 
+    def ConButtonClick(self, _):
+        """Handles button click"""
+        self.paused=False
+
+    def ExitButtonClick(self, _):
+        """Handles button click"""
+        exit()
+
     def AgentStep(self, grid: Grid, agents: list[Agent], i: int) -> Edge:
         """Animates the state of the grid
 
@@ -53,6 +75,9 @@ class HumanAgent(Agent):
             Edge: The next edge the Human agent traverses in the next step.
         """
         super().AgentStep(grid)
+        self.paused = True
+        self.conButton.on_clicked(self.ConButtonClick)
+        self.exitButton.on_clicked(self.ExitButtonClick)
 
         self.ax.clear()
         edgeColors = ['red' if e in grid.fragEdges or e[::-1] in grid.fragEdges else 'gray' for e in grid.graph.edges()]
@@ -74,12 +99,14 @@ class HumanAgent(Agent):
                 colors.add('#069AF3')
             self.DrawMultiColoredNode(node, colors)
 
-        nx.draw_networkx_labels(grid.graph, self.pos)
+        nx.draw_networkx_labels(grid.graph, self.pos, ax=self.ax)
         iHandle = mpatches.Patch(color='none', label=f'i = {i}')
         self.handles[0] = iHandle
         self.legend.remove()
-        plt.legend(handles=self.handles, loc = (-0.16, 0.85), fontsize=16)
+        self.ax.legend(handles=self.handles, loc = (-0.16, 0.85), fontsize=16)
         plt.draw()
         plt.pause(0.1)
+        while self.paused:
+            plt.pause(0.1)
 
-        return (self.coordinates, self.coordinates)
+        return None

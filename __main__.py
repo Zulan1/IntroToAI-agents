@@ -1,5 +1,4 @@
 import sys
-import time
 from os import path
 from agent import Agent
 from grid import Grid
@@ -21,7 +20,6 @@ def Main(argc: int, argv: list[str]):
 
     i = 0
     while any(agent.done is not True for agent in agents):
-        st = time.time()
         for agent in agents:
             if isinstance(agent, GreedyAgent):
                 action = agent.AgentStep(grid, i)
@@ -32,8 +30,6 @@ def Main(argc: int, argv: list[str]):
                 else:
                     action = agent.AgentStep(grid)
                 agent.ProcessStep(grid, action)
-        while time.time() - st < 2:
-            pass
         i += 1
 
 if __name__ == "__main__":
