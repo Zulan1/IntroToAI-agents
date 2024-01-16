@@ -9,4 +9,4 @@ const-naming-style=UPPER_CASE
 variable-naming-style=camelCase
 max-line-length=120
 
-disable=C0114, W1514, C0321
+disable=C0114, W1514, C0321, E0401, C0415, W0221

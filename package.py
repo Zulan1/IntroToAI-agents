@@ -1,3 +1,5 @@
+from type_aliases import Node
+
 class Package:
     """class for packages on the grid
     """
@@ -7,55 +9,43 @@ class Package:
         Args:
             params (list[str]): package parameters
         """
-        self.pickupLoc = (int(params[0]), int(params[1]))
-        self.dropoffLoc = int(params[2])
-        self.pickupTime = (int(params[4]), int(params[5]))
-        self.dropoffMaxtime = int(params[6])
+        self._pickupLoc = (int(params[0]), int(params[1]))
+        self._pickupTime = int(params[2])
+        self._dropoffLoc = (int(params[4]), int(params[5]))
+        self._dropoffMaxtime = int(params[6])
 
-    def GetPickupLoc(self) -> (int, int):
+    @property
+    def pickupLoc(self) -> Node:
         """return pickup location
 
         Returns:
-            (int, int): location
+            Node: location
         """
-        return self.pickupLoc
+        return self._pickupLoc
 
-    def GetDropoffLoc(self) -> (int, int):
+    @property
+    def dropoffLoc(self) -> Node:
         """return dropoff location
 
         Returns:
-            (int, int): location
+            Node: location
         """
-        return self.dropoffLoc
+        return self._dropoffLoc
 
-    def GetPickupTime(self) -> int:
+    @property
+    def pickupTime(self) -> int:
         """return pickup time
 
         Returns:
             int: time
         """
-        return self.pickupTime
+        return self._pickupTime
 
-    def GetDropoffMaxtime(self) -> int:
+    @property
+    def dropoffMaxtime(self) -> int:
         """return dropoff max time
 
         Returns:
             int: time
         """
-        return self.dropoffMaxtime
-
-    # def pickup(self):
-    #     if self.status == "not picked up":
-    #         self.status = "picked up"
-    #         print("Package has been picked up.")
-    #     else:
-    #         print("Package is already picked up.")
-
-    # def dropoff(self):
-    #     if self.status == "picked up":
-    #         self.status = "dropped off"
-    #         print("Package has been dropped off.")
-    #     elif self.status == "not picked up":
-    #         print("Cannot drop off. Package has not been picked up yet.")
-    #     else:
-    #         print("Package has already been dropped off.")
+        return self._dropoffMaxtime
