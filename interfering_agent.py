@@ -22,13 +22,14 @@ class InterferingAgent(Agent):
 
         actions = list(edge for edge in grid.fragEdges if edge[0] == self.coordinates)
         actions += list(edge[::-1] for edge in grid.fragEdges if edge[1] == self.coordinates)
-        if actions != []:
+        if actions:
             action = actions[0]
             for edge in actions[1:]:
+                # prefer lower x, then lower y in case of equality
                 if edge[1][0] < action[1][0] or (edge[1][0] == action[1][0] and edge[1][1] < action[1][1]):
                     action = edge
             return action
-        if self.seq == []:
+        if not self.seq:
             nodes = set(edge[0] for edge in grid.fragEdges).union(set(edge[1] for edge in grid.fragEdges))
             if nodes == set():
                 self.done = True

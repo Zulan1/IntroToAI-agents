@@ -49,7 +49,7 @@ def InitGrid(initFilePath: str) -> (Grid, list[Agent]):
 
     return grid, agents
 
-def SearchMinPath(self, grid: Grid, nodes: list[Node]) -> list[Node]:
+def SearchMinPath(self, grid: Grid, nodes: set[Node]) -> list[Node]:
     """searches the shortest path between 1 start node and multiple target nodes
 
     Args:

@@ -114,7 +114,7 @@ class Grid:
         appearedPackeges = {coords: packages for coords, packages in appearedPackeges.items() if packages != set()}
         return appearedPackeges
 
-    def EarliestPackage(self) -> Node:
+    def EarliestPackage(self) -> set[Node]:
         """Returns the node of the package that arrives the earliest
 
         Returns:
@@ -123,8 +123,10 @@ class Grid:
         earliest = (None, None)
         for node, packages in self._packages.items():
             for package in packages:
-                if earliest != (None, None) and package.pickupTime >= earliest[1]: continue
-                earliest = (node, package.pickupTime)
+                if earliest == (None, None) or package.pickupTime < earliest[1]:
+                    earliest = ({node}, package.pickupTime)
+                if package.pickupTime == earliest[1]:
+                    earliest[0].add(node)
         return earliest[0]
 
 class UpdateGridType(Enum):
