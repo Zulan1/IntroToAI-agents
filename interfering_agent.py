@@ -9,7 +9,7 @@ class InterferingAgent(Agent):
         """Builder function for interfereing agent
         """
         super().__init__(params)
-        self.seq = list()
+        self.seq = []
 
 
     def AgentStep(self, grid: Grid) -> Edge:

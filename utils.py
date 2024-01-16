@@ -82,7 +82,7 @@ def ComparePaths(path0: list[Node], path1: list[Node]) -> list[Node]:
     if len(path0) < len(path1):
         return path0
     if len(path0) > len(path1):
-        return path1        
+        return path1
     dest0x, dest0y = path0[-1]
     dest1x, dest1y = path1[-1]
     if dest0x < dest1x:

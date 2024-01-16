@@ -1,3 +1,4 @@
+import sys
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from matplotlib.widgets import Button
@@ -60,13 +61,13 @@ class HumanAgent(Agent):
             wedge = mpatches.Wedge(center=self.pos[node], r=0.1, theta1=theta1, theta2=theta2, color=color)
             self.ax.add_patch(wedge)
 
-    def ConButtonClick(self, _):
+    def ConButtonClick(self, _) -> None:
         """Handles button click"""
         self.paused=False
 
-    def ExitButtonClick(self, _):
+    def ExitButtonClick(self, _) -> None:
         """Handles button click"""
-        exit()
+        sys.exit()
 
     def AgentStep(self, grid: Grid, agents: list[Agent], i: int) -> Edge:
         """Animates the state of the grid
@@ -108,5 +109,3 @@ class HumanAgent(Agent):
         plt.pause(0.1)
         while self.paused:
             plt.pause(0.1)
-
-        return None

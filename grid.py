@@ -54,7 +54,7 @@ class Grid:
             cmd (str): command used to update the grid
             params (list[str]): parameters to the command
         """
-        if cmd == UpdateGridType.ACTION.value:            
+        if cmd == UpdateGridType.ACTION.value:
             if params in self._fragEdges:
                 self._graph.remove_edge(*params)
                 self._fragEdges.remove(params)
