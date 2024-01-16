@@ -24,6 +24,7 @@ def InitGrid(initFilePath: str) -> (Grid, list[Agent]):
 
     x = list(int(line[1]) for line in lines if line[0].lower() == 'x')[0] # extract x max value from file
     y = list(int(line[1]) for line in lines if line[0].lower() == 'y')[0] # extract y max value from file
+
     grid: Grid = Grid(x, y)
 
     for line in lines:

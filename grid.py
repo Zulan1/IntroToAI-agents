@@ -61,7 +61,6 @@ class Grid:
             if params[::-1] in self._fragEdges:
                 self._graph.remove_edge(*params[::-1])
                 self._fragEdges.remove(params[::-1])
-
         if cmd == UpdateGridType.BLOCK.value:
             edge = ((int(params[0]), int(params[1])), (int(params[2]), int(params[3])))
             if edge in self.graph.edges():
@@ -129,8 +128,7 @@ class Grid:
         return earliest[0]
 
 class UpdateGridType(Enum):
-    """Enum for options to update grid.
-    """
+    """Enum for options to update grid."""
     ACTION = 'ACT'
     BLOCK = 'B'
     FRAGILE = 'F'

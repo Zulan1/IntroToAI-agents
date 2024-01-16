@@ -14,7 +14,6 @@ class Agent(ABC):
         self._coordinates: Node = (int(params[0]), int(params[1]))
         self.done = False
 
-
     @property
     def coordinates(self) -> Node:
         """return the coordinates property

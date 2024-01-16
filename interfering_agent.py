@@ -3,8 +3,7 @@ from grid import Grid
 from type_aliases import Edge
 
 class InterferingAgent(Agent):
-    """Class for Interfering Agent
-    """
+    """Class for Interfering Agent"""
 
     def __init__(self, params: list[str]):
         """Builder function for interfereing agent
@@ -17,8 +16,7 @@ class InterferingAgent(Agent):
         """Calculates the next step of the Interfering Agent
 
         Returns:
-            Edge: The edge the Interfering agent traverses in the next step.
-        """
+            Edge: The edge the Interfering agent traverses in the next step."""
         from utils import SearchMinPath
         super().AgentStep(grid)
 
