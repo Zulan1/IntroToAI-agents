@@ -49,7 +49,7 @@ def InitGrid(initFilePath: str) -> (Grid, list[Agent]):
 
     return grid, agents
 
-def SearchMinPath(self, grid: Grid, nodes: set[Node]) -> list[Node]:
+def SearchMinPath(grid: Grid, start: Node, nodes: set[Node]) -> list[Node]:
     """searches the shortest path between 1 start node and multiple target nodes
 
     Args:
@@ -61,7 +61,7 @@ def SearchMinPath(self, grid: Grid, nodes: set[Node]) -> list[Node]:
     """
     minPath = None
     for node in nodes:
-        path = nx.dijkstra_path(grid.graph, self.coordinates, node)
+        path = Dijkstra(grid.graph, start, node)
         minPath = ComparePaths(minPath, path)
     return list(minPath)
 
@@ -75,20 +75,57 @@ def ComparePaths(path0: list[Node], path1: list[Node]) -> list[Node]:
     Returns:
         list[Node]: shortest path
     """
-    if path0 is None:
+    if path0 is None or (path1 is not None and len(path1) < len(path0)):
         return path1
-    if path1 is None:
+    elif path1 is None or (len(path0) < len(path1)):
         return path0
-    if len(path0) < len(path1):
-        return path0
-    if len(path0) > len(path1):
-        return path1
-    dest0x, dest0y = path0[-1]
-    dest1x, dest1y = path1[-1]
-    if dest0x < dest1x:
-        return path0
-    if dest0x > dest1x:
-        return path1
-    if dest0y < dest1y:
-        return path0
-    return path1
+    else:
+        return min(path0, path1, key=lambda path: (path[-1].x, path[-1].y))
+
+def Dijkstra(g: nx.Graph, start: Node, end: Node) -> list[Node]:
+    """dijkstra algorithm implementation
+
+    Args:
+        g (nx.Graph): a graph
+        start (Node): start node
+        end (Node): end node
+
+    Returns:
+        list[Node]: the shortest path between start and end
+    """
+    dist = {start: 0}
+    prev = {}
+    q = set(g.nodes())
+    while q:
+        u = min(q, key=lambda node: dist.get(node, float('inf')))
+        q.remove(u)
+        if u == end:
+            break
+        for v in g.neighbors(u):
+            alt = dist[u] + g[u][v].get('weight', 1)
+            if alt < dist.get(v, float('inf')):
+                dist[v] = alt
+                prev[v] = u
+    path = []
+    u = end
+    while u in prev:
+        path.insert(0, u)
+        u = prev[u]
+    path.insert(0, u)
+    return path
+
+def KruksalsMinimumSpanningTree(g: nx.Graph) -> nx.Graph:
+    """Kruksal's minimum spanning tree algorithm implementation
+
+    Args:
+        g (nx.Graph): a graph
+
+    Returns:
+        nx.Graph: the minimum spanning tree of g
+    """
+    mst = nx.Graph()
+    edges = sorted(g.edges(data=True), key=lambda edge: edge[2]['weight'])
+    for edge in edges:
+        if not nx.has_path(mst, edge[0], edge[1]):
+            mst.add_edge(edge[0], edge[1], weight=edge[2]['weight'])
+    return mst

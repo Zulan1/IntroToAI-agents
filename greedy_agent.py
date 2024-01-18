@@ -50,12 +50,12 @@ class GreedyAgent(Agent):
                     return noOp
                 if not nodes:
                     earliestPack: set[Node] = grid.EarliestPackage()
-                    self.seq = SearchMinPath(self, grid, earliestPack)[1:]
+                    self.seq = SearchMinPath(grid, self.coordinates, earliestPack)[1:]
                 else:
-                    self.seq = SearchMinPath(self, grid, nodes)[1:] # problem + search
+                    self.seq = SearchMinPath(grid, self.coordinates, nodes)[1:] # problem + search
         elif not self.seq:
             nodes = set(self._packages.keys()) # goal
-            self.seq = SearchMinPath(self, grid, nodes)[1:] # problem + search
+            self.seq = SearchMinPath(grid, self.coordinates, nodes)[1:] # problem + search
 
         if not self.seq:
             return noOp

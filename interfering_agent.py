@@ -34,7 +34,7 @@ class InterferingAgent(Agent):
             if nodes == set():
                 self.done = True
                 return (self.coordinates, self.coordinates)
-            self.seq = SearchMinPath(self, grid, nodes)[1:]
+            self.seq = SearchMinPath(grid, self.coordinates, nodes)[1:]
         action: Edge = (self.coordinates, self.seq[0])
         self.seq = self.seq[1:]
         return action
