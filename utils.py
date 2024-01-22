@@ -3,7 +3,6 @@ from grid import Grid, UpdateGridType
 from agent import Agent, AgentType
 from human_agent import HumanAgent
 from interfering_agent import InterferingAgent
-from stupid_greedy_agent import StupidGreedyAgent
 from greedy_agent import GreedyAgent
 from type_aliases import Node
 
