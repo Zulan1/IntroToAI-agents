@@ -13,7 +13,7 @@ class GreedyAgent(Agent):
         self.seq = []
 
     @property
-    def packages(self) -> list[Package]:
+    def packages(self) -> dict[Node, Package]:
         """Returns self.packages"""
         return self._packages
 
