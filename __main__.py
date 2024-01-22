@@ -1,17 +1,23 @@
-import sys
+import os
+import configparser
 from os import path
 from agent import Agent
 from grid import Grid
-from utils import InitGrid, HumanAgent, GreedyAgent
+from utils import InitGrid
+from human_agent import HumanAgent
+from search_agent import SearchAgent
 
-def Main(argc: int, argv: list[str]):
+
+def Main():
     """Main function of the project
     Args:
         argc (int): System Arguments Count
         argv (list[str]): System Arguments
     """
-    assert argc >= 2, "Arg1 should be the path to grid configuration file"
-    filePath = argv[1]
+    config = configparser.ConfigParser()
+    config.read('config.ini')
+    filePath = config['settings']['grid_config_path']
+    assert filePath, "Path to grid configuration file is not specified!"
     assert path.exists(filePath), "Path to grid configuration file does not exist!"
 
     grid: Grid
@@ -21,7 +27,7 @@ def Main(argc: int, argv: list[str]):
     i = 0
     while any(agent.done is not True for agent in agents):
         for agent in agents:
-            if isinstance(agent, GreedyAgent):
+            if isinstance(agent, SearchAgent):
                 action = agent.AgentStep(grid, i)
                 agent.ProcessStep(grid, action, i)
             else:
@@ -33,4 +39,4 @@ def Main(argc: int, argv: list[str]):
         i += 1
 
 if __name__ == "__main__":
-    Main(len(sys.argv), sys.argv)
+    Main()

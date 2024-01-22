@@ -12,7 +12,7 @@ class Package:
         self._pickupLoc = (int(params[0]), int(params[1]))
         self._pickupTime = int(params[2])
         self._dropoffLoc = (int(params[4]), int(params[5]))
-        self._dropoffMaxtime = int(params[6])
+        self._dropoffMaxTime = int(params[6])
 
     @property
     def pickupLoc(self) -> Node:
@@ -42,10 +42,10 @@ class Package:
         return self._pickupTime
 
     @property
-    def dropoffMaxtime(self) -> int:
+    def dropoffMaxTime(self) -> int:
         """return dropoff max time
 
         Returns:
             int: time
         """
-        return self._dropoffMaxtime
+        return self._dropoffMaxTime

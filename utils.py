@@ -3,6 +3,7 @@ from grid import Grid, UpdateGridType
 from agent import Agent, AgentType
 from human_agent import HumanAgent
 from interfering_agent import InterferingAgent
+from stupid_greedy_agent import StupidGreedyAgent
 from greedy_agent import GreedyAgent
 from type_aliases import Node
 
@@ -39,8 +40,8 @@ def InitGrid(initFilePath: str) -> (Grid, list[Agent]):
         if not any(action == agentType.value for agentType in AgentType): continue
         if action == AgentType.GREEDY.value:
             agents.append(GreedyAgent(line[1:]))
-        # if action == AgentType.HUMAN.value:
-        #     agents.append(HumanAgent(line[1:], grid))
+        if action == AgentType.HUMAN.value:
+            agents.append(HumanAgent(line[1:], grid))
         if action == AgentType.INTERFERING.value:
             agents.append(InterferingAgent(line[1:]))
 

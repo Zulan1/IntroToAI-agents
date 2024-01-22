@@ -6,8 +6,8 @@ import networkx as nx
 from grid import Grid
 from agent import Agent
 from interfering_agent import InterferingAgent
-from greedy_agent import GreedyAgent
 from type_aliases import Node, Edge
+from search_agent import SearchAgent
 
 class HumanAgent(Agent):
     """class for Human Agent
@@ -34,12 +34,13 @@ class HumanAgent(Agent):
         self.exitButton.label.set_color('white')
         self.exitButton.label.set_fontsize(14)
         iHandle = mpatches.Patch(color='none', label='i = 0')
+        scoreHandle = mpatches.Patch(color='none', label='Score = 0')
         brownHandle = mpatches.Patch(color='brown', label='brown = Pickup')
         greenHandle = mpatches.Patch(color='green', label='green = Dropoff')
         blueHandle = mpatches.Patch(color='blue', label='blue = Greedy')
         redHandle = mpatches.Patch(color='red', label='red = Interfering')
         orangeHandle = mpatches.Patch(color='orange', label='orange = Human')
-        self.handles = [iHandle, brownHandle, greenHandle, blueHandle, redHandle, orangeHandle]
+        self.handles = [iHandle, scoreHandle, brownHandle, greenHandle, blueHandle, redHandle, orangeHandle]
         self.legend = plt.legend(handles=self.handles)
         plt.ion()
         plt.show()
@@ -94,7 +95,7 @@ class HumanAgent(Agent):
                     colors.add('orange')
                 if isinstance(agent, InterferingAgent) and agent.coordinates == node:
                     colors.add('red')
-                if isinstance(agent, GreedyAgent) and agent.coordinates == node:
+                if isinstance(agent, SearchAgent) and agent.coordinates == node:
                     colors.add('#0000FF')
             if not colors:
                 colors.add('#069AF3')
@@ -102,9 +103,12 @@ class HumanAgent(Agent):
 
         nx.draw_networkx_labels(grid.graph, self.pos, ax=self.ax)
         iHandle = mpatches.Patch(color='none', label=f'i = {i}')
+        score = [agent.score for agent in agents if isinstance(agent, SearchAgent)][0]
+        scoreHandle = mpatches.Patch(color='none', label=f'score = {score}')
         self.handles[0] = iHandle
+        self.handles[1] = scoreHandle
         self.legend.remove()
-        self.ax.legend(handles=self.handles, loc = (-0.16, 0.85), fontsize=16)
+        self.ax.legend(handles=self.handles, loc = (-0.16, 0.80), fontsize=16)
         plt.draw()
         plt.pause(0.1)
         while self.paused:

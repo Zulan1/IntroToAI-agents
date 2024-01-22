@@ -1,72 +1,47 @@
-from agent import Agent
+import copy
+from typing import Tuple
+from search_agent import SearchAgent
 from grid import Grid
-from type_aliases import Node, Edge
-from package import Package
+from type_aliases import Node
 
-class GreedyAgent(Agent):
-    """class for Greedy Agent
-    """
+class GreedyAgent(SearchAgent):
+    """class for Greedy Agent"""
 
     def __init__(self, params: list[str]):
         super().__init__(params)
-        self._packages: dict[Node, set[Package]] = {}
-        self.seq = []
+        self.visitedStates: set[Tuple[Grid, self]] = set()
 
-    @property
-    def packages(self) -> dict[Node, Package]:
-        """Returns self.packages"""
-        return self._packages
+    def FormulateGoal(self, grid: Grid, i: int) -> set[Node]:
+        """Formulates the goal of the agent"""
+        from heuristics import GetPickUpsAndDropDowns
 
-    def PickPackagesFromNode(self, grid: Grid, time: int) -> None:
-        """add package to agent when he is on the package's pickup location.
+        # todo: correct this algorithm
+        # # Check if all properties of grid and agent match all properties of a visited state
+        # print(grid.__dict__.values(), '\n', self.__dict__.values(), '\n\n')
+        # for g, a in self.visitedStates:
+        #     print(g.__dict__.values(), '\n', a.__dict__.values(), '\n\n')
+        # if self.visitedStates and all(value1 == value2 for state in self.visitedStates
+        #        for value1, value2 in zip(grid.__dict__.values(), state[0].__dict__.values())) and\
+        #            all(value1 == value2 for state in self.visitedStates
+        #                for value1, value2 in zip(self.__dict__.values(), state[1].__dict__.values())):
+        #     return set()
+        # self.visitedStates.add((copy.copy(grid), copy.copy(self)))
+
+        return GetPickUpsAndDropDowns(grid, self)
+
+    def Search(self, grid: Grid, nodes: set[Node]) -> list[Node]:
+        """Searches for the shortest path to the goal
 
         Args:
-            grid(Grid): The simulator's grid.
-        """
-        packages = grid.PickPackagesFromNode(self._coordinates, time)
-        for package in packages:
-            self._packages[package.dropoffLoc] = self._packages.get(package.dropoffLoc, set()).union({package})
-
-    def DropPackage(self) -> None:
-        """removes package from agent when he is on the package's dropoff location."""
-        if self._coordinates in self._packages:
-            del self._packages[self._coordinates]
-
-    def AgentStep(self, grid: Grid, time: int) -> Edge:
-        """Calculates the next step of the Greedy Agent
+            grid (Grid): the simulator's grid
+            nodes (set[Node]): the goal
 
         Returns:
-            Node: The edge the Greedy Agent traverses in the next step.
+            list[Node]: the shortest path to the goal
         """
-        from utils import SearchMinPath
-        super().AgentStep(grid)
-        noOp = (self._coordinates, self._coordinates)
-        if not self._packages:
-            if not self.seq:
-                nodes = set(grid.FilterAppearedPackages(time).keys()) # goal
-                nodesAndFutureNodes = set(grid.packages.keys())
-                if not nodesAndFutureNodes:
-                    self.done = True
-                    return noOp
-                if not nodes:
-                    earliestPack: set[Node] = grid.EarliestPackage()
-                    self.seq = SearchMinPath(grid, self.coordinates, earliestPack)[1:]
-                else:
-                    self.seq = SearchMinPath(grid, self.coordinates, nodes)[1:] # problem + search
-        elif not self.seq:
-            nodes = set(self._packages.keys()) # goal
-            self.seq = SearchMinPath(grid, self.coordinates, nodes)[1:] # problem + search
+        from heuristics import SalesPersonHeursitic
 
-        if not self.seq:
-            return noOp
-        action: Edge = (self._coordinates, self.seq[0])
-        if action not in grid.graph.edges() and action[::-1] not in grid.graph.edges():
-            self.seq = []
-            return self.AgentStep(grid,time)
-        self.seq = self.seq[1:]
-        return action
+        actions = set(edge[1] for edge in grid.graph.edges() if edge[0] == self.coordinates)
+        actions = actions.union(set(edge[0] for edge in grid.graph.edges() if edge[1] == self.coordinates))
 
-    def ProcessStep(self, grid: Grid, action: Edge = None, time: int = 0):
-        super().ProcessStep(grid, action)
-        self.PickPackagesFromNode(grid, time)
-        self.DropPackage()
+        return [min(actions, key=lambda action: SalesPersonHeursitic(grid, nodes.union({action})))]
