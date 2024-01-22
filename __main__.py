@@ -1,10 +1,10 @@
 import configparser
 from os import path
-from agent import Agent
 from grid import Grid
 from utils import InitGrid
-from human_agent import HumanAgent
-from search_agent import SearchAgent
+from agents.agent import Agent
+from agents.human_agent import HumanAgent
+from agents.search_agent import SearchAgent
 
 
 def Main():

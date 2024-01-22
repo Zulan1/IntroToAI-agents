@@ -1,4 +1,4 @@
-from search_agent import SearchAgent
+from agents.search_agent import SearchAgent
 from grid import Grid
 from type_aliases import Node
 from package import Package

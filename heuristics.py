@@ -2,7 +2,7 @@ import networkx as nx
 from grid import Grid
 from type_aliases import Node
 from utils import Dijkstra, MinimumSpanningTree
-from search_agent import SearchAgent
+from agents.search_agent import SearchAgent
 
 def GetPickUpsAndDropDowns(grid: Grid, agent: SearchAgent) -> set[Node]:
     """Gets all the nodes of packages' pickups or dropoffs
@@ -22,8 +22,6 @@ def GetPickUpsAndDropDowns(grid: Grid, agent: SearchAgent) -> set[Node]:
 
 def SalesPersonHeursitic(grid: Grid, nodes: set[Node]) -> int:
     """Calculates the Sales Person Heuristic for the given agent"""
-    # relevantNodes: set[Node] = GetPickUpsAndDropDowns(grid, agent)
-    # relevantNodes.add(startPos)
     newGrid = nx.Graph()
     newGrid.add_nodes_from(nodes)
     for node1 in nodes:

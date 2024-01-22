@@ -3,11 +3,11 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from matplotlib.widgets import Button
 import networkx as nx
-from grid import Grid
-from agent import Agent
-from interfering_agent import InterferingAgent
 from type_aliases import Node, Edge
-from search_agent import SearchAgent
+from agents.agent import Agent
+from agents.interfering_agent import InterferingAgent
+from agents.search_agent import SearchAgent
+from grid import Grid
 
 class HumanAgent(Agent):
     """class for Human Agent
@@ -86,17 +86,21 @@ class HumanAgent(Agent):
         nx.draw_networkx_edges(grid.graph, self.pos, width=2, edge_color=edgeColors, ax=self.ax)
         for node in grid.graph.nodes():
             colors: set[str] = set()
+            for package in set().union(*grid.packages.values()):
+                if node == package.dropoffLoc:
+                    colors.add('purple')
             if node in grid.packages.keys():
                 colors.add('brown')
             for agent in agents:
-                if hasattr(agent, 'packages') and node in agent.packages:
-                    colors.add('green')
                 if isinstance(agent, HumanAgent) and agent.coordinates == node:
                     colors.add('orange')
                 if isinstance(agent, InterferingAgent) and agent.coordinates == node:
                     colors.add('red')
-                if isinstance(agent, SearchAgent) and agent.coordinates == node:
-                    colors.add('#0000FF')
+                if isinstance(agent, SearchAgent):
+                    if node in agent.packages:
+                        colors.add('green')
+                    if agent.coordinates == node:
+                        colors.add('#0000FF')
             if not colors:
                 colors.add('#069AF3')
             self.DrawMultiColoredNode(node, colors)

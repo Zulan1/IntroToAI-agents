@@ -1,4 +1,4 @@
-from agent import Agent
+from agents.agent import Agent
 from grid import Grid
 from type_aliases import Edge
 

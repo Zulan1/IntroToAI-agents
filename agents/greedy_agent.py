@@ -1,6 +1,7 @@
-# import copy
+import copy
 from typing import Tuple
-from search_agent import SearchAgent
+from package import Package
+from agents.search_agent import SearchAgent
 from grid import Grid
 from type_aliases import Node
 
@@ -9,9 +10,9 @@ class GreedyAgent(SearchAgent):
 
     def __init__(self, params: list[str]):
         super().__init__(params)
-        self.visitedStates: set[Tuple[Grid, self]] = set()
+        self.visitedStates: Tuple[Node, set[Package], set[Package]] = None
 
-    def FormulateGoal(self, grid: Grid, i: int) -> set[Node]:
+    def FormulateGoal(self, grid: Grid, _: int) -> set[Node]:
         """Formulates the goal of the agent"""
         from heuristics import GetPickUpsAndDropDowns
 
@@ -29,7 +30,7 @@ class GreedyAgent(SearchAgent):
 
         return GetPickUpsAndDropDowns(grid, self)
 
-    def Search(self, grid: Grid, nodes: set[Node]) -> list[Node]:
+    def Search(self, grid: Grid, nodes: set[Node], i: int) -> list[Node]:
         """Searches for the shortest path to the goal
 
         Args:
@@ -44,4 +45,12 @@ class GreedyAgent(SearchAgent):
         actions = set(edge[1] for edge in grid.graph.edges() if edge[0] == self.coordinates)
         actions = actions.union(set(edge[0] for edge in grid.graph.edges() if edge[1] == self.coordinates))
 
-        return [min(actions, key=lambda action: SalesPersonHeursitic(grid, nodes.union({action})))]
+        minAction: Tuple[int, Node] = (float('inf'), None)
+        for action in actions:
+            fakeAgent = copy.deepcopy(self)
+            fakeGrid = copy.deepcopy(grid)
+            fakeAgent.ProcessStep(fakeGrid, (self.coordinates, action), i)
+            minAction = min(minAction,(SalesPersonHeursitic(fakeGrid, nodes.union({action})), action),
+                            key=lambda x: (x[0], x[1][0], x[1][1]))
+
+        return minAction[1]

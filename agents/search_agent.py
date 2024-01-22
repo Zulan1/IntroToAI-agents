@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from agent import Agent
+from agents.agent import Agent
 from grid import Grid
 from package import Package
 from type_aliases import Node, Edge
@@ -23,7 +23,7 @@ class SearchAgent(Agent, ABC):
         return self._score
 
     @abstractmethod
-    def Search(self, grid: Grid, nodes: list[Node]) -> None:
+    def Search(self, grid: Grid, nodes: set[Node], i: int) -> None:
         """abstract method for search agents"""
         return []
 
@@ -48,14 +48,13 @@ class SearchAgent(Agent, ABC):
             if not nodes:
                 self.done = True
                 return noOp
-            self.seq = self.Search(grid, nodes)
+            self.seq = self.Search(grid, nodes, i)
 
         # Checking the validty of the propesed path
         if not self.seq: return noOp
 
         action: Edge = (self._coordinates, self.seq[0])
-        if (action not in grid.graph.edges() and action[::-1] not in grid.graph.edges()):# or\
-        # (self.seq[-1] not in grid.packages and self.seq[-1] not in self.packages):
+        if (action not in grid.graph.edges() and action[::-1] not in grid.graph.edges()):
             self.seq = []
             return self.AgentStep(grid, i)
         self.seq = self.seq[1:]
