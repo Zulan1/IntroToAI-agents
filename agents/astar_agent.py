@@ -4,7 +4,7 @@ import heapq
 import time
 from typing import Tuple
 from agents.search_agent import SearchAgent
-from agents.interfering_agent import InterferingAgent
+#from agents.interfering_agent import InterferingAgent
 from grid import Grid
 from type_aliases import Node
 
@@ -26,11 +26,7 @@ class AStarAgent(SearchAgent):
 
         return GetPickUpsAndDropDowns(grid, self)
 
-<<<<<<< HEAD
     def Search(self, grid: Grid, nodes: set[Node], i: int, root: SearchAgent = None) -> list[Node]: #, interference: InterferingAgent
-=======
-    def Search(self, grid: Grid, nodes: set[Node], i: int, root: AStarAgent = None) -> list[Node]:
->>>>>>> c9cfc2f34aaf74a379e522284f4e40223a95c09a
         """Searches for the shortest path to the goal
 
         Args:
