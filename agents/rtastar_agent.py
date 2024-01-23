@@ -4,14 +4,13 @@ import heapq
 import time
 from typing import Tuple
 from agents.search_agent import SearchAgent
-from agents.interfering_agent import InterferingAgent
 from grid import Grid
 from type_aliases import Node
 
 State = Tuple[Grid, SearchAgent]
 LIMIT = 975
 
-class AStarAgent(SearchAgent):
+class RTAStarAgent(SearchAgent):
     """class for Greedy Agent"""
     states: list[Tuple[int, int, int, int, State]] = []
 
@@ -26,11 +25,7 @@ class AStarAgent(SearchAgent):
 
         return GetPickUpsAndDropDowns(grid, self)
 
-<<<<<<< HEAD
-    def Search(self, grid: Grid, nodes: set[Node], i: int, root: SearchAgent = None) -> list[Node]: #, interference: InterferingAgent
-=======
-    def Search(self, grid: Grid, nodes: set[Node], i: int, root: AStarAgent = None) -> list[Node]:
->>>>>>> c9cfc2f34aaf74a379e522284f4e40223a95c09a
+    def Search(self, grid: Grid, nodes: set[Node], i: int, root: RTAStarAgent = None) -> list[Node]:
         """Searches for the shortest path to the goal
 
         Args:
@@ -53,23 +48,21 @@ class AStarAgent(SearchAgent):
         if root.limit <= 1:
             # root.done = True
             root.limit = LIMIT
-            AStarAgent.states = []
-            return []
+            RTAStarAgent.states = []
+            return [self.seq[0]]
 
         for action in actions:
             stateAgent = copy.deepcopy(self) # coordinates, done, seq, pack, score, cost, limit, states
             stateGrid = copy.deepcopy(grid) # size, graph, packages, fragEdges
-            # stateInterference = copy.deepcopy(interference) 
-            # stateInterference.ProcessStep(stateGrid, stateInterference.AgentStep(stateGrid))            
             stateAgent.ProcessStep(stateGrid, (self.coordinates, action), i + 1)
             stateAgent.cost += 1
             stateAgent.seq.append(action)
             state = (stateGrid, stateAgent)
             h = SalesPersonHeursitic(stateGrid, nodes.union({stateAgent.coordinates}))
             f = stateAgent.cost + h
-            heapq.heappush(AStarAgent.states, (f, action[0], action[1], time.time(), state))
+            heapq.heappush(RTAStarAgent.states, (f, action[0], action[1], time.time(), state))
 
-        nextState = heapq.heappop(AStarAgent.states)[4]
+        nextState = heapq.heappop(RTAStarAgent.states)[4]
         nextGrid: Grid = nextState[0]
         nextAgent: SearchAgent = nextState[1]
         nextNodes: set[Node] = nextAgent.FormulateGoal(nextGrid, i + 1)
@@ -79,4 +72,4 @@ class AStarAgent(SearchAgent):
         # print(f"limit: {root.limit}")
         # print(nextNodes)
         # print('\n')
-        return nextAgent.Search(nextGrid, nextNodes, i + 1, root) #, stateInterference
+        return nextAgent.Search(nextGrid, nextNodes, i + 1, root)
