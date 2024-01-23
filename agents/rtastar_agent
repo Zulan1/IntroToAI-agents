@@ -10,7 +10,7 @@ from type_aliases import Node
 State = Tuple[Grid, SearchAgent]
 LIMIT = 975
 
-class AStarAgent(SearchAgent):
+class RTAStarAgent(SearchAgent):
     """class for Greedy Agent"""
     states: list[Tuple[int, int, int, int, State]] = []
 
@@ -25,7 +25,7 @@ class AStarAgent(SearchAgent):
 
         return GetPickUpsAndDropDowns(grid, self)
 
-    def Search(self, grid: Grid, nodes: set[Node], i: int, root: AStarAgent = None) -> list[Node]:
+    def Search(self, grid: Grid, nodes: set[Node], i: int, root: RTAStarAgent = None) -> list[Node]:
         """Searches for the shortest path to the goal
 
         Args:
@@ -48,8 +48,8 @@ class AStarAgent(SearchAgent):
         if root.limit <= 1:
             # root.done = True
             root.limit = LIMIT
-            AStarAgent.states = []
-            return []
+            RTAStarAgent.states = []
+            return [self.seq[0]]
 
         for action in actions:
             stateAgent = copy.deepcopy(self) # coordinates, done, seq, pack, score, cost, limit, states
@@ -60,9 +60,9 @@ class AStarAgent(SearchAgent):
             state = (stateGrid, stateAgent)
             h = SalesPersonHeursitic(stateGrid, nodes.union({stateAgent.coordinates}))
             f = stateAgent.cost + h
-            heapq.heappush(AStarAgent.states, (f, action[0], action[1], time.time(), state))
+            heapq.heappush(RTAStarAgent.states, (f, action[0], action[1], time.time(), state))
 
-        nextState = heapq.heappop(AStarAgent.states)[4]
+        nextState = heapq.heappop(RTAStarAgent.states)[4]
         nextGrid: Grid = nextState[0]
         nextAgent: SearchAgent = nextState[1]
         nextNodes: set[Node] = nextAgent.FormulateGoal(nextGrid, i + 1)

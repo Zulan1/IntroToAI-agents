@@ -15,7 +15,7 @@ class Grid:
             y (int): 2nd dimension size
         """
         self._size: Tuple[int, int] = (x + 1, y + 1)
-        self._graph: nx.grid_2d_graph = nx.grid_2d_graph(x + 1, y + 1)
+        self._graph: nx.Graph = nx.grid_2d_graph(x + 1, y + 1)
         self._fragEdges: set[Edge] = set()
         self._packages: dict[Node, set[Package]] = {}
 
