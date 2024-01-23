@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
 from agents.agent import Agent
+# from agents.astar_agent import AStarAgent
+# from agents.interfering_agent import InterferingAgent
 from grid import Grid
 from package import Package
 from type_aliases import Node, Edge
@@ -33,7 +35,7 @@ class SearchAgent(Agent, ABC):
         return set()
 
     # @abstractmethod
-    def AgentStep(self, grid: Grid, i: int) -> Edge:
+    def AgentStep(self, grid: Grid, i: int) -> Edge: #, interference: InterferingAgent
         """Calculates the next step of the Search Agent
 
         Returns:
@@ -48,6 +50,9 @@ class SearchAgent(Agent, ABC):
             if not nodes:
                 self.done = True
                 return noOp
+            # if isinstance(self, AStarAgent):
+            #     self.seq = self.Search(grid, nodes, i, interference)
+            # else:
             self.seq = self.Search(grid, nodes, i)
 
         # Checking the validty of the propesed path

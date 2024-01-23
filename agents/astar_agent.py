@@ -3,6 +3,7 @@ import heapq
 import time
 from typing import Tuple
 from agents.search_agent import SearchAgent
+from agents.interfering_agent import InterferingAgent
 from grid import Grid
 from type_aliases import Node
 
@@ -24,7 +25,7 @@ class AStarAgent(SearchAgent):
 
         return GetPickUpsAndDropDowns(grid, self)
 
-    def Search(self, grid: Grid, nodes: set[Node], i: int, root: SearchAgent = None) -> list[Node]:
+    def Search(self, grid: Grid, nodes: set[Node], i: int, root: SearchAgent = None) -> list[Node]: #, interference: InterferingAgent
         """Searches for the shortest path to the goal
 
         Args:
@@ -53,6 +54,8 @@ class AStarAgent(SearchAgent):
         for action in actions:
             stateAgent = copy.deepcopy(self) # coordinates, done, seq, pack, score, cost, limit, states
             stateGrid = copy.deepcopy(grid) # size, graph, packages, fragEdges
+            # stateInterference = copy.deepcopy(interference) 
+            # stateInterference.ProcessStep(stateGrid, stateInterference.AgentStep(stateGrid))            
             stateAgent.ProcessStep(stateGrid, (self.coordinates, action), i + 1)
             stateAgent.cost += 1
             stateAgent.seq.append(action)
@@ -71,4 +74,4 @@ class AStarAgent(SearchAgent):
         # print(f"limit: {root.limit}")
         # print(nextNodes)
         # print('\n')
-        return nextAgent.Search(nextGrid, nextNodes, i + 1, root)
+        return nextAgent.Search(nextGrid, nextNodes, i + 1, root) #, stateInterference
