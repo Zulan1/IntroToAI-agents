@@ -44,16 +44,12 @@ class GreedyAgent(SearchAgent):
 
         actions = set(edge[1] for edge in grid.graph.edges() if edge[0] == self.coordinates)
         actions = actions.union(set(edge[0] for edge in grid.graph.edges() if edge[1] == self.coordinates))
-        minAction: Tuple[int, Node] = (float('inf'), None)
+        minAction: Tuple[int, Node] = (float('inf'), (float('inf'), float('inf')))
         for action in actions:
             fakeAgent = copy.deepcopy(self)
             fakeGrid = copy.deepcopy(grid)
             fakeAgent.ProcessStep(fakeGrid, (self.coordinates, action), i)
             h = SalesPersonHeursitic(fakeGrid, nodes.union({action}))
-            if minAction[1] is None:
-                minAction = (h, action)
-            else:
-                minAction = min(minAction,(h, action),
-                                key=lambda x:  (x[0], x[1][0], x[1][1]))
+            minAction = min(minAction,(h, action), key=lambda x:  (x[0], x[1][0], x[1][1]))
 
         return [minAction[1]]
