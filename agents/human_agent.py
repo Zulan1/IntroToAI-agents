@@ -35,12 +35,14 @@ class HumanAgent(Agent):
         self.exitButton.label.set_fontsize(14)
         iHandle = mpatches.Patch(color='none', label='i = 0')
         scoreHandle = mpatches.Patch(color='none', label='Score = 0')
-        brownHandle = mpatches.Patch(color='brown', label='brown = Pickup')
-        greenHandle = mpatches.Patch(color='green', label='green = Dropoff')
-        blueHandle = mpatches.Patch(color='blue', label='blue = Greedy')
-        redHandle = mpatches.Patch(color='red', label='red = Interfering')
-        orangeHandle = mpatches.Patch(color='orange', label='orange = Human')
-        self.handles = [iHandle, scoreHandle, brownHandle, greenHandle, blueHandle, redHandle, orangeHandle]
+        brownHandle = mpatches.Patch(color='brown', label='- Pickup')
+        greenHandle = mpatches.Patch(color='green', label='- Active Dropoff')
+        purpleHandle = mpatches.Patch(color='purple', label='- Passive Dropoff')
+        blueHandle = mpatches.Patch(color='blue', label='- Greedy')
+        redHandle = mpatches.Patch(color='red', label='- Interfering')
+        orangeHandle = mpatches.Patch(color='orange', label='- Human')
+        self.handles = [iHandle, scoreHandle, brownHandle, greenHandle,
+                        purpleHandle, blueHandle, redHandle, orangeHandle]
         self.legend = plt.legend(handles=self.handles)
         plt.ion()
         plt.show()
