@@ -3,8 +3,9 @@ from grid import Grid, UpdateGridType
 from agents.agent import Agent, AgentType
 from agents.human_agent import HumanAgent
 from agents.interfering_agent import InterferingAgent
-from agents.astar_agent import AStarAgent
-from agents.greedy_agent import GreedyAgent
+from agents.rtastar_agent import RTAStarAgent
+# from agents.astar_agent import AStarAgent
+# from agents.greedy_agent import GreedyAgent
 from type_aliases import Node
 
 def InitGrid(initFilePath: str) -> (Grid, list[Agent]):
@@ -39,7 +40,7 @@ def InitGrid(initFilePath: str) -> (Grid, list[Agent]):
         action = line[0]
         if not any(action == agentType.value for agentType in AgentType): continue
         if action == AgentType.GREEDY.value:
-            agents.append(GreedyAgent(line[1:]))
+            agents.append(RTAStarAgent(line[1:]))
         if action == AgentType.HUMAN.value:
             agents.append(HumanAgent(line[1:], grid))
         if action == AgentType.INTERFERING.value:
@@ -47,6 +48,8 @@ def InitGrid(initFilePath: str) -> (Grid, list[Agent]):
 
     for agent in agents:
         agent.ProcessStep(grid)
+
+    Grid.numOfPackages = len(set.union(*grid.packages.values()))
 
     return grid, agents
 

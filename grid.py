@@ -6,6 +6,7 @@ from type_aliases import Node, Edge
 
 class Grid:
     """Simulator's Grid"""
+    numOfPackages = 0
 
     def __init__(self, x: int , y: int):
         """Initiallizes connected grid with size x*y
