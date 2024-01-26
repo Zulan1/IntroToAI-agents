@@ -5,7 +5,9 @@ from utils import InitGrid
 from agents.agent import Agent
 from agents.human_agent import HumanAgent
 from agents.search_agent import SearchAgent
-from agents.interfering_agent import InterferingAgent
+from agents.astar_agent import AStarAgent
+from agents.rtastar_agent import RTAStarAgent
+# from agents.interfering_agent import InterferingAgent
 
 
 def Main():
@@ -16,9 +18,14 @@ def Main():
     """
     config = configparser.ConfigParser()
     config.read('config.ini')
-    filePath = config['settings']['grid_config_path']
-    assert filePath, "Path to grid configuration file is not specified!"
+    filePath = config['settings'].get('grid_config_path', './tests/test1.txt')
     assert path.exists(filePath), "Path to grid configuration file does not exist!"
+
+    limit = int(config['settings'].get('limit', 10000))
+    l = int(config['settings'].get('L', 10))
+    AStarAgent.limit = limit
+    RTAStarAgent.limit = l
+    RTAStarAgent.l = l
 
     grid: Grid
     agents: list[Agent]
