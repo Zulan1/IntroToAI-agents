@@ -1,36 +1,46 @@
-import sys
+import configparser
 from os import path
-from agent import Agent
 from grid import Grid
-from utils import InitGrid, HumanAgent, GreedyAgent
+from utils import InitGrid
+from agents.agent import Agent
+from agents.human_agent import HumanAgent
+from agents.search_agent import SearchAgent
+from agents.astar_agent import AStarAgent
+from agents.rtastar_agent import RTAStarAgent
+from agents.interfering_agent import InterferingAgent
 
-def Main(argc: int, argv: list[str]):
+
+def Main():
     """Main function of the project
     Args:
         argc (int): System Arguments Count
         argv (list[str]): System Arguments
     """
-    assert argc >= 2, "Arg1 should be the path to grid configuration file"
-    filePath = argv[1]
+    config = configparser.ConfigParser()
+    config.read('config.ini')
+    filePath = config['settings'].get('grid_config_path', './tests/test1.txt')
     assert path.exists(filePath), "Path to grid configuration file does not exist!"
+
+    limit = int(config['settings'].get('limit', 10000))
+    l = int(config['settings'].get('L', 10))
+    AStarAgent.limit = limit
+    RTAStarAgent.limit = l
+    RTAStarAgent.l = l
 
     grid: Grid
     agents: list[Agent]
     grid, agents = InitGrid(filePath)
+    lastDropOffTime = max(p.dropOffMaxTime for p in set().union(*grid.packages.values()))
+    # interfereingAgent = [a for a in agents if isinstance(a, InterferingAgent)][0]
+    # humanAgent = [a for a in agents if isinstance(a, HumanAgent)][0]
+    # otherAgents = [a for a in agents if not isinstance(a, HumanAgent)]
 
     i = 0
-    while any(agent.done is not True for agent in agents):
+    while any(agent.done is not True for agent in agents) and i <= lastDropOffTime:
         for agent in agents:
-            if isinstance(agent, GreedyAgent):
-                action = agent.AgentStep(grid, i)
-                agent.ProcessStep(grid, action, i)
-            else:
-                if isinstance(agent, HumanAgent):
-                    action = agent.AgentStep(grid, agents, i)
-                else:
-                    action = agent.AgentStep(grid)
-                agent.ProcessStep(grid, action)
+            action = agent.AgentStep(grid, agents, i)
+            agent.ProcessStep(grid, action, i)
         i += 1
 
 if __name__ == "__main__":
-    Main(len(sys.argv), sys.argv)
+    Main()

@@ -1,9 +1,11 @@
 import networkx as nx
 from grid import Grid, UpdateGridType
-from agent import Agent, AgentType
-from human_agent import HumanAgent
-from interfering_agent import InterferingAgent
-from greedy_agent import GreedyAgent
+from agents.agent import Agent, AgentType
+from agents.human_agent import HumanAgent
+from agents.interfering_agent import InterferingAgent
+from agents.rtastar_agent import RTAStarAgent
+from agents.astar_agent import AStarAgent
+from agents.greedy_agent import GreedyAgent
 from type_aliases import Node
 
 def InitGrid(initFilePath: str) -> (Grid, list[Agent]):
@@ -38,7 +40,7 @@ def InitGrid(initFilePath: str) -> (Grid, list[Agent]):
         action = line[0]
         if not any(action == agentType.value for agentType in AgentType): continue
         if action == AgentType.GREEDY.value:
-            agents.append(GreedyAgent(line[1:]))
+            agents.append(AStarAgent(line[1:]))
         if action == AgentType.HUMAN.value:
             agents.append(HumanAgent(line[1:], grid))
         if action == AgentType.INTERFERING.value:
@@ -46,6 +48,8 @@ def InitGrid(initFilePath: str) -> (Grid, list[Agent]):
 
     for agent in agents:
         agent.ProcessStep(grid)
+
+    Grid.numOfPackages = len(set.union(*grid.packages.values()))
 
     return grid, agents
 
@@ -77,10 +81,9 @@ def ComparePaths(path0: list[Node], path1: list[Node]) -> list[Node]:
     """
     if path0 is None or (path1 is not None and len(path1) < len(path0)):
         return path1
-    elif path1 is None or (len(path0) < len(path1)):
+    if path1 is None or (len(path0) < len(path1)):
         return path0
-    else:
-        return min(path0, path1, key=lambda path: (path[-1].x, path[-1].y))
+    return min(path0, path1, key=lambda path: (path[-1].x, path[-1].y))
 
 def Dijkstra(g: nx.Graph, start: Node, end: Node) -> list[Node]:
     """dijkstra algorithm implementation
@@ -114,7 +117,7 @@ def Dijkstra(g: nx.Graph, start: Node, end: Node) -> list[Node]:
     path.insert(0, u)
     return path
 
-def KruksalsMinimumSpanningTree(g: nx.Graph) -> nx.Graph:
+def MinimumSpanningTree(g: nx.Graph) -> nx.Graph:
     """Kruksal's minimum spanning tree algorithm implementation
 
     Args:
@@ -124,8 +127,9 @@ def KruksalsMinimumSpanningTree(g: nx.Graph) -> nx.Graph:
         nx.Graph: the minimum spanning tree of g
     """
     mst = nx.Graph()
-    edges = sorted(g.edges(data=True), key=lambda edge: edge[2]['weight'])
+    mst.add_nodes_from(g.nodes)
+    edges = sorted(g.edges(data=True), key=lambda edge: edge[2].get('weight', 1))
     for edge in edges:
         if not nx.has_path(mst, edge[0], edge[1]):
-            mst.add_edge(edge[0], edge[1], weight=edge[2]['weight'])
+            mst.add_edge(edge[0], edge[1], weight=edge[2].get('weight', 1))
     return mst

@@ -6,6 +6,7 @@ from type_aliases import Node, Edge
 
 class Grid:
     """Simulator's Grid"""
+    numOfPackages = 0
 
     def __init__(self, x: int , y: int):
         """Initiallizes connected grid with size x*y
@@ -39,7 +40,7 @@ class Grid:
         return self._fragEdges
 
     @property
-    def packages(self) -> dict[Node, Package]:
+    def packages(self) -> dict[Node, set[Package]]:
         """returns self._packages
 
         Returns:
@@ -81,7 +82,7 @@ class Grid:
         coords = package.pickupLoc
         self._packages[coords] = self._packages.get(coords, set()).union({package})
 
-    def PickPackagesFromNode(self, coords: Node, time: int) -> set[Package]:
+    def PickPackagesFromNode(self, coords: Node, i: int) -> set[Package]:
         """Return a Package at the location if exists and appeard and delete from grid
 
         Args:
@@ -92,29 +93,29 @@ class Grid:
         """
         packages = set()
         for package in self._packages.get(coords, set()).copy():
-            if package.pickupTime <= time:
+            if package.pickupTime <= i:
                 packages.add(package)
                 self._packages[coords].remove(package)
                 if not self._packages[coords]:
                     del self._packages[coords]
         return packages
 
-    def FilterAppearedPackages(self, time: int) -> dict[Package]:
+    def FilterAppearedPackages(self, i: int) -> dict[Package]:
         """return all packages that are currently available
 
         Args:
-            time (int): current time
+            i (int): current iteration
 
         Returns:
             dict[Package]: Currently available packages
         """
         appearedPackeges: dict[Node, Package] = {coords:\
-            {package for package in packages if package.pickupTime <= time}\
+            {package for package in packages if package.pickupTime <= i}\
                 for coords, packages in self._packages.items()}
         appearedPackeges = {coords: packages for coords, packages in appearedPackeges.items() if packages != set()}
         return appearedPackeges
 
-    def EarliestPackage(self) -> set[Node]:
+    def EarliestPacksage(self) -> set[Node]:
         """Returns the node of the package that arrives the earliest
 
         Returns:
