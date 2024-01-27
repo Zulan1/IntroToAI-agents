@@ -30,7 +30,7 @@ class StupidGreedyAgent(SearchAgent):
         earliestPackages = grid.EarliestPacksage()
         return nodes or earliestPackages or set()
 
-    def Search(self, grid: Grid, nodes: set[Node]) -> list[Node]:
+    def Search(self, grid: Grid, nodes: set[Node], _, __) -> list[Node]:
         """Searches for the shortest path to the goal
 
         Args:

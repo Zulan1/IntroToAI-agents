@@ -4,7 +4,8 @@ import heapq
 import time
 from typing import Tuple
 from agents.search_agent import SearchAgent
-#from agents.interfering_agent import InterferingAgent
+from agents.interfering_agent import InterferingAgent
+from agents.agent import Agent
 from grid import Grid
 from type_aliases import Node
 
@@ -33,7 +34,7 @@ class AStarAgent(SearchAgent):
         return []
 
 
-    def Search(self, grid: Grid, nodes: set[Node], _: int) -> list[Node]: #, interference: InterferingAgent
+    def Search(self, grid: Grid, nodes: set[Node], agents: list[Agent], _: int) -> list[Node]:
         """Searches for the shortest path to the goal
 
         Args:
@@ -48,25 +49,28 @@ class AStarAgent(SearchAgent):
         nextGrid: Grid = grid
         nextAgent: AStarAgent = self
         nextNodes: set[Node] = nodes
+        nextInterference: InterferingAgent = [agent for agent in agents if isinstance(agent, InterferingAgent)][0]
 
         while nextAgent.score != Grid.numOfPackages:
 
             actions = set(edge[1] for edge in grid.graph.edges() if edge[0] == nextAgent.coordinates)
             actions = actions.union(set(edge[0] for edge in grid.graph.edges() if edge[1] == nextAgent.coordinates))
+            if not nextGrid.FilterAppearedPackages(nextAgent.cost):
+                actions.add(nextAgent.coordinates)
 
-            self.limit -= 1
             if self.limit <= 0:
                 return self.ExceededLimit(nextAgent)
+            self.limit -= 1
 
             for action in actions:
                 stateAgent = copy.deepcopy(nextAgent) # coordinates, done, seq, pack, score, cost, limit, states
                 stateGrid = copy.deepcopy(nextGrid) # size, graph, packages, fragEdges
-                # stateInterference = copy.deepcopy(interference)
-                # stateInterference.ProcessStep(stateGrid, stateInterference.AgentStep(stateGrid))
+                stateInterference = copy.deepcopy(nextInterference)
+                stateInterference.ProcessStep(stateGrid, stateInterference.AgentStep(stateGrid, None, None), stateAgent.cost)
                 stateAgent.cost += 1
                 stateAgent.ProcessStep(stateGrid, (nextAgent.coordinates, action), stateAgent.cost)
                 stateAgent.seq.append(action)
-                state = (stateGrid, stateAgent)
+                state = (stateGrid, stateAgent, stateInterference)
                 h = SalesPersonHeursitic(stateGrid, nextNodes.union({stateAgent.coordinates}))
                 f = stateAgent.cost + h
                 heapq.heappush(AStarAgent.states, (f, action[0], action[1], time.time(), state))
@@ -74,6 +78,7 @@ class AStarAgent(SearchAgent):
             nextState = heapq.heappop(AStarAgent.states)[4]
             nextGrid: Grid = nextState[0]
             nextAgent: AStarAgent = nextState[1]
+            nextInterference: InterferingAgent = nextState[2]
             nextNodes: set[Node] = nextAgent.FormulateGoal(nextGrid, stateAgent.cost)
             # print(f'popped f: {f}, h: {f - nextAgent.cost} g: {nextAgent.cost}')
             # print(f"path: {nextAgent.seq}")

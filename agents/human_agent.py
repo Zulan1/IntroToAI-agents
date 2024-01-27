@@ -78,7 +78,7 @@ class HumanAgent(Agent):
         Returns:
             Edge: The next edge the Human agent traverses in the next step.
         """
-        super().AgentStep(grid)
+        super().AgentStep(grid, agents, i)
         self.paused = True
         self.conButton.on_clicked(self.ConButtonClick)
         self.exitButton.on_clicked(self.ExitButtonClick)
@@ -114,7 +114,7 @@ class HumanAgent(Agent):
         self.handles[0] = iHandle
         self.handles[1] = scoreHandle
         self.legend.remove()
-        self.ax.legend(handles=self.handles, loc = (-0.16, 0.80), fontsize=16)
+        self.ax.legend(handles=self.handles, loc = (-0.16, 0.6), fontsize=16)
         plt.draw()
         plt.pause(0.1)
         while self.paused:

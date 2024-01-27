@@ -40,7 +40,7 @@ class Grid:
         return self._fragEdges
 
     @property
-    def packages(self) -> dict[Node, Package]:
+    def packages(self) -> dict[Node, set[Package]]:
         """returns self._packages
 
         Returns:

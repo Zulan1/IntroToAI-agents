@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from agents.agent import Agent
 # from agents.astar_agent import AStarAgent
-# from agents.interfering_agent import InterferingAgent
+from agents.interfering_agent import InterferingAgent
 from grid import Grid
 from package import Package
 from type_aliases import Node, Edge
@@ -25,7 +25,7 @@ class SearchAgent(Agent, ABC):
         return self._score
 
     @abstractmethod
-    def Search(self, grid: Grid, nodes: set[Node], i: int) -> None:
+    def Search(self, grid: Grid, nodes: set[Node], interference: InterferingAgent, i: int) -> None:
         """abstract method for search agents"""
         return []
 
@@ -34,14 +34,13 @@ class SearchAgent(Agent, ABC):
         """abstract method for search agents"""
         return set()
 
-    # @abstractmethod
-    def AgentStep(self, grid: Grid, i: int) -> Edge: #, interference: InterferingAgent
+    def AgentStep(self, grid: Grid, agents: list[Agent], i: int) -> Edge:
         """Calculates the next step of the Search Agent
 
         Returns:
             Node: The edge the Search Agent traverses in the next step.
         """
-        super().AgentStep(grid)
+        super().AgentStep(grid, agents, i)
         noOp = (self._coordinates, self._coordinates)
 
         self.ProcessStep(grid, noOp, i)
@@ -50,18 +49,15 @@ class SearchAgent(Agent, ABC):
             if not nodes:
                 self.done = True
                 return noOp
-            # if isinstance(self, AStarAgent):
-            #     self.seq = self.Search(grid, nodes, i, interference)
-            # else:
-            self.seq = self.Search(grid, nodes, i)
+            self.seq = self.Search(grid, nodes, agents, i)
 
         # Checking the validty of the propesed path
         if not self.seq: return noOp
 
         action: Edge = (self._coordinates, self.seq[0])
-        if (action not in grid.graph.edges() and action[::-1] not in grid.graph.edges()):
+        if (action not in grid.graph.edges() and action[::-1] not in grid.graph.edges()) and action != noOp:
             self.seq = []
-            return self.AgentStep(grid, i)
+            return self.AgentStep(grid, agents, i)
         self.seq = self.seq[1:]
         return action
 
@@ -84,6 +80,6 @@ class SearchAgent(Agent, ABC):
         """removes package from agent when he is on the package's dropoff location."""
         if self._coordinates in self._packages:
             for package in self._packages[self._coordinates]:
-                if package.dropoffMaxTime < i: continue
+                if package.dropOffMaxTime < i: continue
                 self._score += 1
             del self._packages[self._coordinates]

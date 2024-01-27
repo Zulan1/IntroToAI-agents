@@ -12,13 +12,13 @@ class InterferingAgent(Agent):
         self.seq = []
 
 
-    def AgentStep(self, grid: Grid) -> Edge:
+    def AgentStep(self, grid: Grid, _, __) -> Edge:
         """Calculates the next step of the Interfering Agent
 
         Returns:
             Edge: The edge the Interfering agent traverses in the next step."""
         from utils import SearchMinPath
-        super().AgentStep(grid)
+        super().AgentStep(grid, _, __)
 
         actions = list(edge for edge in grid.fragEdges if edge[0] == self.coordinates)
         actions += list(edge[::-1] for edge in grid.fragEdges if edge[1] == self.coordinates)

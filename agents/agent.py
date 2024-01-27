@@ -1,3 +1,4 @@
+from __future__ import annotations
 from enum import Enum
 from abc import ABC, abstractmethod
 from grid import Grid, UpdateGridType
@@ -24,10 +25,10 @@ class Agent(ABC):
         return self._coordinates
 
     @abstractmethod
-    def AgentStep(self, grid: Grid) -> Edge:
+    def AgentStep(self, grid: Grid, agents: list[Agent], i: int) -> Edge:
         """abstract method. implemented differently in inherted classes."""
 
-    def ProcessStep(self, grid: Grid, action: Edge = None):
+    def ProcessStep(self, grid: Grid, action: Edge = None, _: int = 0):
         """Updates the state of the simulator's according to the step taken by the agent
 
         Args:
