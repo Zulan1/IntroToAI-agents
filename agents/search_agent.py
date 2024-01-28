@@ -1,7 +1,5 @@
 from abc import ABC, abstractmethod
 from agents.agent import Agent
-# from agents.astar_agent import AStarAgent
-from agents.interfering_agent import InterferingAgent
 from grid import Grid
 from package import Package
 from type_aliases import Node, Edge
@@ -25,7 +23,7 @@ class SearchAgent(Agent, ABC):
         return self._score
 
     @abstractmethod
-    def Search(self, grid: Grid, nodes: set[Node], interference: InterferingAgent, i: int) -> None:
+    def Search(self, grid: Grid, nodes: set[Node], agents: list[Agent], i: int) -> None:
         """abstract method for search agents"""
         return []
 
