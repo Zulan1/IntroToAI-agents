@@ -1,4 +1,6 @@
 import sys
+import matplotlib
+matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from matplotlib.widgets import Button
@@ -10,8 +12,7 @@ from agents.search_agent import SearchAgent
 from grid import Grid
 
 class HumanAgent(Agent):
-    """class for Human Agent
-    """
+    """class for Human Agent"""
 
     def __init__(self, params:list[str], grid: Grid):
         super().__init__(params)
@@ -88,7 +89,7 @@ class HumanAgent(Agent):
         nx.draw_networkx_edges(grid.graph, self.pos, width=2, edge_color=edgeColors, ax=self.ax)
         for node in grid.graph.nodes():
             colors: set[str] = set()
-            for package in set().union(*grid.packages.values()):
+            for package in sum(grid.packages.values(), []):
                 if node == package.dropoffLoc:
                     colors.add('purple')
             if node in grid.packages.keys():

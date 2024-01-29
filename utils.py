@@ -49,7 +49,7 @@ def InitGrid(initFilePath: str) -> (Grid, list[Agent]):
     for agent in agents:
         agent.ProcessStep(grid)
 
-    Grid.numOfPackages = len(set.union(*grid.packages.values()))
+    Grid.numOfPackages = len(sum(grid.packages.values(), []))
 
     return grid, agents
 
@@ -129,6 +129,7 @@ def MinimumSpanningTree(g: nx.Graph) -> nx.Graph:
     mst = nx.Graph()
     mst.add_nodes_from(g.nodes)
     edges = sorted(g.edges(data=True), key=lambda edge: edge[2].get('weight', 1))
+    
     for edge in edges:
         if not nx.has_path(mst, edge[0], edge[1]):
             mst.add_edge(edge[0], edge[1], weight=edge[2].get('weight', 1))

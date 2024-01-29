@@ -24,10 +24,11 @@ def SalesPersonHeursitic(grid: Grid, nodes: set[Node]) -> int:
     """Calculates the Sales Person Heuristic for the given agent"""
     newGrid = nx.Graph()
     newGrid.add_nodes_from(nodes)
-    for node1 in nodes:
-        for node2 in nodes:
-            if node1 == node2: continue
-            newGrid.add_edge(node1, node2, weight=len(Dijkstra(grid.graph, node1, node2)) - 1)
+    
+    newGrid.add_edges_from((node1, node2, {"weight": len(Dijkstra(grid.graph, node1, node2)) - 1})
+                          for node1 in nodes
+                          for node2 in nodes
+                          if node1 != node2)
 
     mst = MinimumSpanningTree(newGrid)
 
@@ -35,3 +36,5 @@ def SalesPersonHeursitic(grid: Grid, nodes: set[Node]) -> int:
     edgeWeights = [mst[u][v].get("weight", 1) for u, v in mst.edges()]
 
     return sum(edgeWeights)
+
+# def SalesPersonHeuristic2(grid)

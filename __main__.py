@@ -23,14 +23,13 @@ def Main():
 
     limit = int(config['settings'].get('limit', 10000))
     l = int(config['settings'].get('L', 10))
-    AStarAgent.limit = limit
-    RTAStarAgent.limit = l
+    AStarAgent.l = limit
     RTAStarAgent.l = l
 
     grid: Grid
     agents: list[Agent]
     grid, agents = InitGrid(filePath)
-    lastDropOffTime = max(p.dropOffMaxTime for p in set().union(*grid.packages.values()))
+    lastDropOffTime = max(p.dropOffMaxTime for p in sum(grid.packages.values(), []))
     # interfereingAgent = [a for a in agents if isinstance(a, InterferingAgent)][0]
     # humanAgent = [a for a in agents if isinstance(a, HumanAgent)][0]
     # otherAgents = [a for a in agents if not isinstance(a, HumanAgent)]

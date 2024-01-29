@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Tuple
 from agents.agent import Agent
 from grid import Grid
 from package import Package
@@ -9,11 +10,11 @@ class SearchAgent(Agent, ABC):
     def __init__(self, params: list[str]) -> None:
         super().__init__(params)
         self.seq: list[Node] = []
-        self._packages: dict[Node, set[Package]] = {}
+        self._packages: dict[Node, list[Package]] = {}
         self._score: int = 0
 
     @property
-    def packages(self) -> list[Package]:
+    def packages(self) -> dict[Node, list[Package]]:
         """Returns self.packages"""
         return self._packages
 
@@ -72,12 +73,24 @@ class SearchAgent(Agent, ABC):
         """
         packages = grid.PickPackagesFromNode(self._coordinates, i)
         for package in packages:
-            self._packages[package.dropoffLoc] = self._packages.get(package.dropoffLoc, set()).union({package})
+            self._packages[package.dropoffLoc] = self._packages.get(package.dropoffLoc, []) + [package]
 
     def DropPackage(self, i: int) -> None:
         """removes package from agent when he is on the package's dropoff location."""
         if self._coordinates in self._packages:
             for package in self._packages[self._coordinates]:
-                if package.dropOffMaxTime < i: continue
+                if i > package.dropOffMaxTime: continue
                 self._score += 1
             del self._packages[self._coordinates]
+    
+    def GetDropdowns(self) -> Tuple[Tuple[Node, int]]:
+        """Returns the dropoff locations of the agent's packages
+
+        Returns:
+            set[Tuple[Node, int]]: the dropoff locations of the agent's packages
+        """
+        dropdowns = ()
+        for Node, packges in self._packages.items():
+            for package in packges:
+                dropdowns = dropdowns + ((Node, package.dropOffMaxTime),)
+        return dropdowns

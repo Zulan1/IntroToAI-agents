@@ -1,24 +1,25 @@
 from __future__ import annotations
 import copy
 import heapq
-import time
 from typing import Tuple
 from agents.search_agent import SearchAgent
 from agents.interfering_agent import InterferingAgent
 from agents.agent import Agent
 from grid import Grid
-from type_aliases import Node
+from type_aliases import Node, Edge
 
 State = Tuple[Grid, SearchAgent]
 
 class AStarAgent(SearchAgent):
     """class for Greedy Agent"""
+    states: list[Tuple[int, int, int, State]] = []
+    visitedStates: set[Tuple[Node, Tuple[Tuple[Node, int]], Tuple[Tuple[Node, int]]], Tuple[Edge]] = set()
+    limit = 0
+    l = 10000
 
     def __init__(self, params: list[str]):
         super().__init__(params)
         self.cost = 0
-        self.states: list[Tuple[int, int, int, int, State]] = []
-        self.limit = 10000
 
     def FormulateGoal(self, grid: Grid, _: int) -> set[Node]:
         """Formulates the goal of the agent"""
@@ -28,13 +29,11 @@ class AStarAgent(SearchAgent):
 
     def ExceededLimit(self, _: AStarAgent) -> list[Node]:
         """Checks if the agent exceeded the limit"""
-        print(self.limit)
         self.done = True
-        AStarAgent.states = []
         return []
 
 
-    def Search(self, grid: Grid, nodes: set[Node], agents: list[Agent], _: int) -> list[Node]:
+    def Search(self, grid: Grid, nodes: set[Node], agents: list[Agent], i: int) -> list[Node]:
         """Searches for the shortest path to the goal
 
         Args:
@@ -45,29 +44,39 @@ class AStarAgent(SearchAgent):
             list[Node]: the shortest path to the goal
         """
         from heuristics import SalesPersonHeursitic
+        from utils import Dijkstra
 
-        if any(isinstance(agent, AStarAgent) for agent in agents if agent != self):
-            return self.ParallelSearch(grid, nodes, agents, _)
+        # if any(isinstance(agent, AStarAgent) for agent in agents if agent != self):
+        #     return self.ParallelSearch(grid, nodes, agents, _)
 
         nextGrid: Grid = grid
         nextAgent: AStarAgent = self
         nextNodes: set[Node] = nodes
         nextInterference: InterferingAgent = [agent for agent in agents if isinstance(agent, InterferingAgent)][0]
+        AStarAgent.states = []
+        AStarAgent.visitedStates = set()
+        AStarAgent.limit = 0
+        self.cost = i
+        
 
+        iterations = 1
         while nextAgent.score != Grid.numOfPackages:
 
-            actions = set(edge[1] for edge in grid.graph.edges() if edge[0] == nextAgent.coordinates)
-            actions = actions.union(set(edge[0] for edge in grid.graph.edges() if edge[1] == nextAgent.coordinates))
-            if not nextGrid.FilterAppearedPackages(nextAgent.cost):
+            actions = set(edge[1] for edge in nextGrid.graph.edges() if edge[0] == nextAgent.coordinates)
+            actions = actions.union(set(edge[0] for edge in nextGrid.graph.edges() if edge[1] == nextAgent.coordinates))
+            # if not nextGrid.FilterAppearedPackages(nextAgent.cost):
+            if any(len(Dijkstra(nextGrid.graph, nextAgent.coordinates, p.pickupLoc)) - 1 < p.pickupTime - nextAgent.cost
+                   for p in sum(nextGrid.packages.values(), [])):
                 actions.add(nextAgent.coordinates)
+            # actions.add(nextAgent.coordinates)
 
-            if self.limit <= 0:
+            if self.limit >= self.l:
                 return self.ExceededLimit(nextAgent)
-            self.limit -= 1
+            self.limit += 1
 
             for action in actions:
-                stateAgent = copy.deepcopy(nextAgent) # coordinates, done, seq, pack, score, cost, limit, states
-                stateGrid = copy.deepcopy(nextGrid) # size, graph, packages, fragEdges
+                stateAgent = copy.deepcopy(nextAgent)
+                stateGrid = copy.deepcopy(nextGrid)
                 stateInterference = copy.deepcopy(nextInterference)
                 stateInterference.ProcessStep(stateGrid, stateInterference.AgentStep(stateGrid, None, None), stateAgent.cost)
                 stateAgent.cost += 1
@@ -76,19 +85,47 @@ class AStarAgent(SearchAgent):
                 state = (stateGrid, stateAgent, stateInterference)
                 h = SalesPersonHeursitic(stateGrid, nextNodes.union({stateAgent.coordinates}))
                 f = stateAgent.cost + h
-                heapq.heappush(AStarAgent.states, (f, action[0], action[1], time.time(), state))
+                visited = (stateAgent.coordinates, stateGrid.GetPickups(), stateAgent.GetDropdowns(), stateInterference.coordinates)#, tuple(grid.fragEdges))
+                if visited not in AStarAgent.visitedStates or action == nextAgent.coordinates:
+                    heapq.heappush(AStarAgent.states, (f, h, iterations, state))
+                    iterations += 1
+                    AStarAgent.visitedStates.add(visited)
+                # else:
+                #     print("visited")
+                #     print(visited)
+                #     print('\n')
 
-            nextState = heapq.heappop(AStarAgent.states)[4]
+            
+            f, h, _, nextState = heapq.heappop(AStarAgent.states)
             nextGrid: Grid = nextState[0]
             nextAgent: AStarAgent = nextState[1]
             nextInterference: InterferingAgent = nextState[2]
-            nextNodes: set[Node] = nextAgent.FormulateGoal(nextGrid, stateAgent.cost)
-            # print(f'popped f: {f}, h: {f - nextAgent.cost} g: {nextAgent.cost}')
-            # print(f"path: {nextAgent.seq}")
-            # print(f"limit: {self.limit}")
-            # print(nextNodes)
-            # print('\n')
+            nextNodes: set[Node] = nextAgent.FormulateGoal(nextGrid, None)
+            print(f'popped f: {f}, h: {h}, g: {nextAgent.cost}')
+            print(f"path: {nextAgent.seq}")
+            print(f"limit: {self.limit}")
+            print(f"pickups: {nextGrid.GetPickups()}, dropdowns: {nextAgent.GetDropdowns()}")
+            print(f"score: {nextAgent.score}")
+            print('\n')
         return nextAgent.seq
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     def ParallelSearch(self, grid: Grid, nodes: set[Node], agents: list[Agent], _: int) -> list[Node]:
         """Searches for the shortest path to the goal for 2 agents"""
@@ -113,6 +150,7 @@ class AStarAgent(SearchAgent):
                     return self.ExceededLimit(nextAgent)
                 agent.limit -= 1
 
+            iterations = 1
             for action1 in actions[0]:
                 for action2 in actions[1]:
                     stateGrid = copy.deepcopy(nextGrid) # size, graph, packages, fragEdges
@@ -128,7 +166,8 @@ class AStarAgent(SearchAgent):
                         state = (stateGrid, stateAgent, stateInterference)
                         h = SalesPersonHeursitic(stateGrid, nextNodes.union({stateAgent.coordinates}))
                         f = stateAgent.cost + h
-                        heapq.heappush(searchAgents[i].states, (f, action[i][0], action[i][1], time.time(), state))
+                        heapq.heappush(searchAgents[i].states, (f, iterations, state))
+                        iterations += 1
 
             # need to select from 1 set of states because they need to be on the same grid the for needs to go
             for i, nextAgent in enumerate(nextAgents):
