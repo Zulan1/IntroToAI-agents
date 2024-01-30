@@ -141,6 +141,13 @@ class Grid:
             for package in packages:
                 pickups = pickups + ((node, package.pickupTime),)
         return pickups
+    
+    def GetDropdowns(self) -> Tuple[Tuple[Node, int]]:
+        dropdowns = ()
+        for packages in self._packages.values():
+            for package in packages:
+                dropdowns = dropdowns + ((package.dropoffLoc, package.dropOffMaxTime),)
+        return dropdowns
 
 class UpdateGridType(Enum):
     """Enum for options to update grid."""

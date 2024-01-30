@@ -50,6 +50,8 @@ def InitGrid(initFilePath: str) -> (Grid, list[Agent]):
         agent.ProcessStep(grid)
 
     Grid.numOfPackages = len(sum(grid.packages.values(), []))
+    lastDropOffTime = max(p.dropOffMaxTime for p in sum(grid.packages.values(), []))
+    Agent.lastDropOffTime = lastDropOffTime
 
     return grid, agents
 

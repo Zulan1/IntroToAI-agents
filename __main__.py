@@ -1,13 +1,11 @@
 import configparser
 from os import path
+import matplotlib.pyplot as plt
 from grid import Grid
 from utils import InitGrid
 from agents.agent import Agent
-from agents.human_agent import HumanAgent
-from agents.search_agent import SearchAgent
 from agents.astar_agent import AStarAgent
 from agents.rtastar_agent import RTAStarAgent
-from agents.interfering_agent import InterferingAgent
 
 
 def Main():
@@ -29,13 +27,9 @@ def Main():
     grid: Grid
     agents: list[Agent]
     grid, agents = InitGrid(filePath)
-    lastDropOffTime = max(p.dropOffMaxTime for p in sum(grid.packages.values(), []))
-    # interfereingAgent = [a for a in agents if isinstance(a, InterferingAgent)][0]
-    # humanAgent = [a for a in agents if isinstance(a, HumanAgent)][0]
-    # otherAgents = [a for a in agents if not isinstance(a, HumanAgent)]
 
     i = 0
-    while any(agent.done is not True for agent in agents) and i <= lastDropOffTime:
+    while any(agent.done is not True for agent in agents) and i <= Agent.lastDropOffTime:
         for agent in agents:
             action = agent.AgentStep(grid, agents, i)
             agent.ProcessStep(grid, action, i)

@@ -10,6 +10,7 @@ class Agent(ABC):
     Args:
         ABC: inherits from abstract class
     """
+    lastDropOffTime: int = float('inf')
 
     def __init__(self, params: list[str]) -> None:
         self._coordinates: Node = (int(params[0]), int(params[1]))

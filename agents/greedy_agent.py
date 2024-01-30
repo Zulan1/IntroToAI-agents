@@ -2,5 +2,5 @@ from agents.rtastar_agent import RTAStarAgent
 
 class GreedyAgent(RTAStarAgent):
     """class for Greedy Agent"""
-    l = 1
-    limit = 0
+    l: int = 1
+    limit: int = 0
