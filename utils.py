@@ -3,10 +3,20 @@ from grid import Grid, UpdateGridType
 from agents.agent import Agent, AgentType
 from agents.human_agent import HumanAgent
 from agents.interfering_agent import InterferingAgent
-from agents.rtastar_agent import RTAStarAgent
-from agents.astar_agent import AStarAgent
+from agents.stupid_greedy_agent import StupidGreedyAgent
 from agents.greedy_agent import GreedyAgent
+from agents.astar_agent import AStarAgent
+from agents.rtastar_agent import RTAStarAgent
 from type_aliases import Node
+
+agent_classes = {
+    AgentType.STUPID_GREEDY.value: StupidGreedyAgent,
+    AgentType.GREEDY.value: GreedyAgent,
+    AgentType.A_STAR.value: AStarAgent,
+    AgentType.RTA_STAR.value: RTAStarAgent,
+    AgentType.HUMAN.value: HumanAgent,
+    AgentType.INTERFERING.value: InterferingAgent,
+}
 
 def InitGrid(initFilePath: str) -> (Grid, list[Agent]):
     """initializes grid from init file
@@ -38,13 +48,8 @@ def InitGrid(initFilePath: str) -> (Grid, list[Agent]):
     agents: list[Agent] = []
     for line in lines: # build the agents specified in the file
         action = line[0]
-        if not any(action == agentType.value for agentType in AgentType): continue
-        if action == AgentType.GREEDY.value:
-            agents.append(AStarAgent(line[1:]))
-        if action == AgentType.HUMAN.value:
-            agents.append(HumanAgent(line[1:], grid))
-        if action == AgentType.INTERFERING.value:
-            agents.append(InterferingAgent(line[1:]))
+        if action not in agent_classes: continue
+        agents.append(agent_classes[action](line[1:], grid))
 
     for agent in agents:
         agent.ProcessStep(grid)

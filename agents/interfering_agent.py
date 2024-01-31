@@ -5,10 +5,10 @@ from type_aliases import Edge
 class InterferingAgent(Agent):
     """Class for Interfering Agent"""
 
-    def __init__(self, params: list[str]):
+    def __init__(self, params: list[str], _: Grid):
         """Builder function for interfereing agent
         """
-        super().__init__(params)
+        super().__init__(params, _)
         self.seq = []
 
 

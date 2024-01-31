@@ -15,7 +15,7 @@ class HumanAgent(Agent):
     """class for Human Agent"""
 
     def __init__(self, params:list[str], grid: Grid):
-        super().__init__(params)
+        super().__init__(params, grid)
         self.init = False
         fig, ax = plt.subplots(figsize=(16, 9))
         self.ax = ax

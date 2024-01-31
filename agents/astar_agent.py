@@ -1,6 +1,7 @@
 from __future__ import annotations
 import copy
 import heapq
+import time
 from typing import Tuple
 from agents.search_agent import SearchAgent
 from agents.interfering_agent import InterferingAgent
@@ -17,8 +18,8 @@ class AStarAgent(SearchAgent):
     limit = 0
     l = 10000
 
-    def __init__(self, params: list[str]):
-        super().__init__(params)
+    def __init__(self, params: list[str], _: Grid):
+        super().__init__(params, _)
         self.cost = 0
 
     def FormulateGoal(self, grid: Grid, _: int) -> set[Node]:
@@ -60,7 +61,9 @@ class AStarAgent(SearchAgent):
         
 
         iterations = 1
+        maxT = float('-inf')
         while nextAgent.score != Grid.numOfPackages:
+            st = time.time()
 
             actions = set(edge[1] for edge in nextGrid.graph.edges() if edge[0] == nextAgent.coordinates)
             actions = actions.union(set(edge[0] for edge in nextGrid.graph.edges() if edge[1] == nextAgent.coordinates))
@@ -95,6 +98,9 @@ class AStarAgent(SearchAgent):
                 #     print(visited)
                 #     print('\n')
 
+            T = round(time.time() - st, 3)
+            maxT = max(maxT, T)
+
             if not AStarAgent.states:
                 print("no states left, problem might be unsolveable.")
                 self.done = True
@@ -106,10 +112,12 @@ class AStarAgent(SearchAgent):
             nextInterference: InterferingAgent = nextState[2]
             nextNodes: set[Node] = nextAgent.FormulateGoal(nextGrid, None)
             assert nextNodes or nextAgent.score == Grid.numOfPackages, "bug! no nodes left and not done"
+            print(f"This expand took T={T} seconds, longest expansion took maxT={maxT} seconds")
             print(f'popped f: {f}, h: {h}, g: {nextAgent.cost}')
             print(f"path: {nextAgent.seq}")
             print(f"limit: {self.limit}")
             print(f"pickups: {nextGrid.GetPickups()}, dropdowns: {nextAgent.GetDropdowns()}")
+            print(f"future pickups: {nextGrid.GetDropdowns()}")
             print(f"score: {nextAgent.score}")
             print('\n')
         return nextAgent.seq

@@ -7,8 +7,8 @@ from type_aliases import Node, Edge
 
 class SearchAgent(Agent, ABC):
     """abstract class for search agents"""
-    def __init__(self, params: list[str]) -> None:
-        super().__init__(params)
+    def __init__(self, params: list[str], _: Grid) -> None:
+        super().__init__(params, _)
         self.seq: list[Node] = []
         self._packages: dict[Node, list[Package]] = {}
         self._score: int = 0

@@ -1,6 +1,6 @@
 #X 14                ; Maximum x coordinate
 #Y 13                ; Maximum y coordinate
-#P 12 0 7  D 4 2 50  ; Package at (4,0) from time 1, deliver to (4,2) on or before time 60
+#P 12 0 7  D 4 2 7  ; Package at (4,0) from time 1, deliver to (4,2) on or before time 7
 #P 0 13 6  D 4 0 60  ; Package at (0,3) from time 5, deliver to (4,0) on or before time 60
 #P 12 0 5  D 2 2 60  ; Package at (2,3) from time 5, deliver to (4,0) on or before time 60
 #P 11 13 4  D 1 2 60  ; Package at (2,3) from time 5, deliver to (4,0) on or before time 60

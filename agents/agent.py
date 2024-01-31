@@ -12,7 +12,7 @@ class Agent(ABC):
     """
     lastDropOffTime: int = float('inf')
 
-    def __init__(self, params: list[str]) -> None:
+    def __init__(self, params: list[str], _: Grid) -> None:
         self._coordinates: Node = (int(params[0]), int(params[1]))
         self.done = False
 
@@ -43,6 +43,9 @@ class Agent(ABC):
 
 class AgentType(Enum):
     """Agent Type Enum"""
-    GREEDY = 'A'
+    STUPID_GREEDY = 'SG'
+    GREEDY = 'G'
+    A_STAR = 'A'
+    RTA_STAR = 'RTA'
     HUMAN = 'H'
     INTERFERING = 'I'

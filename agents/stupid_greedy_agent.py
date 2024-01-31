@@ -6,8 +6,8 @@ from package import Package
 class StupidGreedyAgent(SearchAgent):
     """class for Stupid Greedy Agent"""
 
-    def __init__(self, params: list[str]):
-        super().__init__(params)
+    def __init__(self, params: list[str], _: Grid):
+        super().__init__(params, _)
         self._packages: dict[Node, set[Package]] = {}
         self.seq = []
 
