@@ -10,6 +10,7 @@ from grid import Grid
 from type_aliases import Node, Edge
 
 State = Tuple[Grid, SearchAgent]
+ROUND_DIGITS = 5
 
 class AStarAgent(SearchAgent):
     """class for Greedy Agent"""
@@ -98,7 +99,7 @@ class AStarAgent(SearchAgent):
                 #     print(visited)
                 #     print('\n')
 
-            T = round(time.time() - st, 3)
+            T = round(time.time() - st, ROUND_DIGITS)
             maxT = max(maxT, T)
 
             if not AStarAgent.states:

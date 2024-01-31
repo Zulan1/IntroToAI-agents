@@ -147,6 +147,7 @@ class Grid:
         for packages in self._packages.values():
             for package in packages:
                 dropdowns = dropdowns + ((package.dropoffLoc, package.dropOffMaxTime),)
+        
         return dropdowns
 
 class UpdateGridType(Enum):
