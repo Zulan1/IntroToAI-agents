@@ -7,6 +7,7 @@ from agents.stupid_greedy_agent import StupidGreedyAgent
 from agents.greedy_agent import GreedyAgent
 from agents.astar_agent import AStarAgent
 from agents.rtastar_agent import RTAStarAgent
+from agents.multi_agent import MultiAgent
 from type_aliases import Node
 
 agent_classes = {
@@ -16,6 +17,7 @@ agent_classes = {
     AgentType.RTA_STAR.value: RTAStarAgent,
     AgentType.HUMAN.value: HumanAgent,
     AgentType.INTERFERING.value: InterferingAgent,
+    AgentType.MULTI_AGNENT.value: MultiAgent
 }
 
 def InitGrid(initFilePath: str) -> (Grid, list[Agent]):

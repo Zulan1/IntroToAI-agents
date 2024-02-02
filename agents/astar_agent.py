@@ -9,7 +9,7 @@ from agents.agent import Agent
 from grid import Grid
 from type_aliases import Node, Edge
 
-State = Tuple[Grid, SearchAgent]
+State = Tuple[Grid, Agent, InterferingAgent]
 ROUND_DIGITS = 5
 
 class AStarAgent(SearchAgent):
@@ -66,15 +66,15 @@ class AStarAgent(SearchAgent):
         while nextAgent.score != Grid.numOfPackages:
             st = time.time()
 
+            if self.limit >= self.l:
+                return self.ExceededLimit(nextAgent)
+            self.limit += 1
+
             actions = set(edge[1] for edge in nextGrid.graph.edges() if edge[0] == nextAgent.coordinates)
             actions = actions.union(set(edge[0] for edge in nextGrid.graph.edges() if edge[1] == nextAgent.coordinates))
             if any(len(Dijkstra(nextGrid.graph, nextAgent.coordinates, p.pickupLoc)) - 1 < p.pickupTime - nextAgent.cost
                    for p in sum(nextGrid.packages.values(), [])):
                 actions.add(nextAgent.coordinates)
-
-            if self.limit >= self.l:
-                return self.ExceededLimit(nextAgent)
-            self.limit += 1
 
             for action in actions:
                 if any(nextAgent.cost > dropOffTime[1]
@@ -118,7 +118,7 @@ class AStarAgent(SearchAgent):
             print(f"path: {nextAgent.seq}")
             print(f"limit: {self.limit}")
             print(f"pickups: {nextGrid.GetPickups()}, dropdowns: {nextAgent.GetDropdowns()}")
-            print(f"future pickups: {nextGrid.GetDropdowns()}")
+            print(f"future dropdowns: {nextGrid.GetDropdowns()}")
             print(f"score: {nextAgent.score}")
             print('\n')
         return nextAgent.seq

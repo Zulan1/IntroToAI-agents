@@ -3,6 +3,7 @@ from grid import Grid
 from type_aliases import Node
 from utils import Dijkstra, MinimumSpanningTree
 from agents.search_agent import SearchAgent
+from agents.multi_agent import MultiAgent
 import itertools
 
 def GetPickUpsAndDropDowns(grid: Grid, agent: SearchAgent) -> set[Node]:
@@ -38,7 +39,7 @@ def SalesPersonHeursitic(grid: Grid, nodes: set[Node]) -> int:
 
     return sum(edgeWeights)
 
-def MultiAgentHeuristic(grid: Grid, agents_coordinates: list[Node], nodes: set[Node]) -> int:
+def MultiAgentHeuristic(grid: Grid, agentsCoordinates: list[Node], nodes: set[Node]) -> int:
     """Calculates the Multi-Agent Heuristic for the given agents"""
     nodes1, nodes2 = set(), set()
     minCut = float('inf')
@@ -46,7 +47,12 @@ def MultiAgentHeuristic(grid: Grid, agents_coordinates: list[Node], nodes: set[N
         for cut in itertools.combinations(nodes, r):
             nodes1 = set(cut)
             nodes2 = nodes - nodes1
-            minCut = min(minCut, SalesPersonHeursitic(grid.graph, nodes1.union({agents_coordinates[0]}))
-                          + SalesPersonHeursitic(grid.graph, nodes2.union({agents_coordinates[1]})))
+            minCut = min(minCut, SalesPersonHeursitic(grid, nodes1.union({agentsCoordinates[0]}))
+                          + SalesPersonHeursitic(grid, nodes2.union({agentsCoordinates[1]})))
     return minCut
 
+def MultiAgentHeuristic2(grid: Grid, multiAgent: MultiAgent, i: int) -> int:
+    """Calculates the Multi-Agent Heuristic for the given agents"""
+    return int(Grid.numOfPackages -
+            0.5 * (len(multiAgent.agent1.packages) + len(multiAgent.agent2.packages)) -
+            0.25 * len([node for node, t in grid.GetDropdowns() if t <= i]))

@@ -49,3 +49,4 @@ class AgentType(Enum):
     RTA_STAR = 'RTA'
     HUMAN = 'H'
     INTERFERING = 'I'
+    MULTI_AGNENT = 'MA'
