@@ -3,6 +3,7 @@ from grid import Grid
 from type_aliases import Node
 from utils import Dijkstra, MinimumSpanningTree
 from agents.search_agent import SearchAgent
+import itertools
 
 def GetPickUpsAndDropDowns(grid: Grid, agent: SearchAgent) -> set[Node]:
     """Gets all the nodes of packages' pickups or dropoffs
@@ -37,4 +38,15 @@ def SalesPersonHeursitic(grid: Grid, nodes: set[Node]) -> int:
 
     return sum(edgeWeights)
 
-# def SalesPersonHeuristic2(grid)
+def MultiAgentHeuristic(grid: Grid, agents_coordinates: list[Node], nodes: set[Node]) -> int:
+    """Calculates the Multi-Agent Heuristic for the given agents"""
+    nodes1, nodes2 = set(), set()
+    minCut = float('inf')
+    for r in range(len(nodes) + 1):
+        for cut in itertools.combinations(nodes, r):
+            nodes1 = set(cut)
+            nodes2 = nodes - nodes1
+            minCut = min(minCut, SalesPersonHeursitic(grid.graph, nodes1.union({agents_coordinates[0]}))
+                          + SalesPersonHeursitic(grid.graph, nodes2.union({agents_coordinates[1]})))
+    return minCut
+
