@@ -22,19 +22,23 @@ class MultiAgent(Agent):
     def __init__(self, params: list[str], _: Grid) -> None:
         self.agent1: AStarAgent = AStarAgent(params[:2], _)
         self.agent2: AStarAgent = AStarAgent(params[2:], _)
-        self.cost = 0
         self.done = False
 
-    # @property
-    # def cost(self) -> int:
-    #     """Returns self.cost"""
-    #     return self.agent1.cost + self.agent2.cost
+    @property
+    def score(self) -> int:
+        """Returns self.score"""
+        return self.agent1.score + self.agent2.score
 
-    # @cost.setter
-    # def cost(self, value: int) -> None:
-    #     """Sets self.cost"""
-    #     self.agent1.cost = value
-    #     self.agent2.cost = value
+    @property
+    def cost(self) -> int:
+        """Returns self.cost"""
+        return self.agent1.cost
+
+    @cost.setter
+    def cost(self, value: int) -> None:
+        """Sets self.cost"""
+        self.agent1.cost = value
+        self.agent2.cost = value
 
     def FormulateGoal(self, grid: Grid, _: int) -> set[Node]:
         """Formulates the goal for the agent"""
@@ -78,7 +82,8 @@ class MultiAgent(Agent):
 
     def ProcessStep(self, grid: Grid, action: Edge = None, _: int = 0):
         if not action:
-            action = ((self.agent1.coordinates, self.agent1.coordinates), (self.agent2.coordinates, self.agent2.coordinates))
+            action = ((self.agent1.coordinates, self.agent1.coordinates),
+                      (self.agent2.coordinates, self.agent2.coordinates))
         self.agent1.ProcessStep(grid, action[0], _)
         self.agent2.ProcessStep(grid, action[1], _)
 
@@ -99,7 +104,7 @@ class MultiAgent(Agent):
         listT = []
         maxT = float('-inf')
 
-        while nextAgent.agent1.score + nextAgent.agent2.score != Grid.numOfPackages:
+        while nextAgent.score != Grid.numOfPackages:
             st = time.time()
             if self.limit >= self.l:
                 return self.ExceededLimit(nextAgent)
@@ -124,16 +129,21 @@ class MultiAgent(Agent):
                     stateAgent = copy.deepcopy(nextAgent)
                     stateGrid = copy.deepcopy(nextGrid)
                     stateInterference = copy.deepcopy(nextInterference)
-                    stateInterference.ProcessStep(stateGrid, stateInterference.AgentStep(stateGrid, None, None), stateAgent.cost)
+                    stateInterference.ProcessStep(stateGrid,
+                                                  stateInterference.AgentStep(stateGrid, None, None), stateAgent.cost)
                     stateAgent.cost += 1
-                    stateAgent.agent1.cost += 1
-                    stateAgent.agent2.cost += 1
-                    stateAgent.ProcessStep(stateGrid, ((stateAgent.agent1.coordinates, action1), (stateAgent.agent2.coordinates, action2)), stateAgent.cost)
+                    # stateAgent.agent1.cost += 1
+                    # stateAgent.agent2.cost += 1
+                    stateAgent.ProcessStep(stateGrid,
+                                           ((stateAgent.agent1.coordinates, action1),
+                                            (stateAgent.agent2.coordinates, action2)),
+                                           stateAgent.cost)
                     stateAgent.agent1.seq.append(action1)
                     stateAgent.agent2.seq.append(action2)
-                    visited = (stateGrid.GetPickups(), (stateAgent.agent1.coordinates, stateAgent.agent1.GetDropdowns()),
-                               (stateAgent.agent2.coordinates, stateAgent.agent2.GetDropdowns()), stateInterference.coordinates,
-                               tuple(stateGrid.fragEdges))
+                    visited = (stateGrid.GetPickups(),
+                               (stateAgent.agent1.coordinates, stateAgent.agent1.GetDropdowns()),
+                               (stateAgent.agent2.coordinates, stateAgent.agent2.GetDropdowns()),
+                               stateInterference.coordinates, tuple(stateGrid.fragEdges))
                     state = (stateGrid, stateAgent, stateInterference)
                     # h = MultiAgentHeuristic(stateGrid, (stateAgent.agent1.coordinates, stateAgent.agent2.coordinates), nextNodes)
                     h = MultiAgentHeuristic2(stateGrid, stateAgent, stateAgent.cost)
@@ -163,13 +173,14 @@ class MultiAgent(Agent):
             nextAgent: MultiAgent = nextState[1]
             nextInterference: InterferingAgent = nextState[2]
             nextNodes: set[Node] = nextAgent.FormulateGoal(nextGrid, None)
-            assert nextNodes or nextAgent.agent1.score + nextAgent.agent2.score == Grid.numOfPackages, "bug! no nodes left and not done"
+            assert nextNodes or nextAgent.score == Grid.numOfPackages, "bug! no nodes left and not done"
             print(f"This expand took T={T} seconds, longest expansion took maxT={maxT} seconds")
             print(f"avg listT={round(sum(listT) / len(listT), ROUND_DIGITS)} seconds, Total time: {sum(listT)} seconds")
             print(f'popped f: {f}, h: {h}, g: {nextAgent.cost}')
             print(f"path1: {nextAgent.agent1.seq}\npath2: {nextAgent.agent2.seq}")
             print(f"limit: {self.limit}")
-            print(f"pickups: {nextGrid.GetPickups()}, dropdowns1: {nextAgent.agent1.GetDropdowns()}, dropdowns2: {nextAgent.agent2.GetDropdowns()}")
+            print(f"pickups: {nextGrid.GetPickups()}")
+            print(f"dropdowns1: {nextAgent.agent1.GetDropdowns()}, dropdowns2: {nextAgent.agent2.GetDropdowns()}")
             print(f"future dropdowns: {nextGrid.GetDropdowns()}")
             print(f"score1: {nextAgent.agent1.score}, score2: {nextAgent.agent2.score}")
             print('\n')
