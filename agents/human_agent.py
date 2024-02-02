@@ -40,7 +40,7 @@ class HumanAgent(Agent):
         brownHandle = mpatches.Patch(color='brown', label='- Pickup')
         greenHandle = mpatches.Patch(color='green', label='- Active Dropoff')
         purpleHandle = mpatches.Patch(color='purple', label='- Passive Dropoff')
-        blueHandle = mpatches.Patch(color='blue', label='- Greedy')
+        blueHandle = mpatches.Patch(color='blue', label='- Agent/s')
         redHandle = mpatches.Patch(color='red', label='- Interfering')
         orangeHandle = mpatches.Patch(color='orange', label='- Human')
         self.handles = [iHandle, scoreHandle, brownHandle, greenHandle,

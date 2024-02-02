@@ -47,6 +47,8 @@ def InitGrid(initFilePath: str) -> (Grid, list[Agent]):
         if any(action == updateGridType.value for updateGridType in UpdateGridType):
             grid.UpdateGrid(action, line[1:])
 
+    Grid.numOfPackages = len(sum(grid.packages.values(), []))
+
     agents: list[Agent] = []
     for line in lines: # build the agents specified in the file
         action = line[0]
@@ -56,7 +58,6 @@ def InitGrid(initFilePath: str) -> (Grid, list[Agent]):
     for agent in agents:
         agent.ProcessStep(grid)
 
-    Grid.numOfPackages = len(sum(grid.packages.values(), []))
     lastDropOffTime = max(p.dropOffMaxTime for p in sum(grid.packages.values(), []))
     Agent.lastDropOffTime = lastDropOffTime
 

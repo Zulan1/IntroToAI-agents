@@ -82,7 +82,19 @@ class SearchAgent(Agent, ABC):
                 if i > package.dropOffMaxTime: continue
                 self._score += 1
             del self._packages[self._coordinates]
-    
+
+    def GetPickups(self) -> Tuple[Tuple[Node, int]]:
+        """Returns the pickup locations of the agent's packages
+
+        Returns:
+            set[Tuple[Node, int]]: the pickup locations of the agent's packages
+        """
+        pickups = ()
+        for node, packges in self._packages.items():
+            for package in packges:
+                pickups = pickups + ((node, package.pickupTime),)
+        return pickups
+
     def GetDropdowns(self) -> Tuple[Tuple[Node, int]]:
         """Returns the dropoff locations of the agent's packages
 
@@ -90,7 +102,7 @@ class SearchAgent(Agent, ABC):
             set[Tuple[Node, int]]: the dropoff locations of the agent's packages
         """
         dropdowns = ()
-        for Node, packges in self._packages.items():
+        for node, packges in self._packages.items():
             for package in packges:
-                dropdowns = dropdowns + ((Node, package.dropOffMaxTime),)
+                dropdowns = dropdowns + ((node, package.dropOffMaxTime),)
         return dropdowns

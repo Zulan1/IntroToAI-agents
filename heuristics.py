@@ -1,10 +1,11 @@
+import itertools
+from typing import Tuple
 import networkx as nx
 from grid import Grid
 from type_aliases import Node
 from utils import Dijkstra, MinimumSpanningTree
 from agents.search_agent import SearchAgent
 from agents.multi_agent import MultiAgent
-import itertools
 
 def GetPickUpsAndDropDowns(grid: Grid, agent: SearchAgent) -> set[Node]:
     """Gets all the nodes of packages' pickups or dropoffs
@@ -26,7 +27,7 @@ def SalesPersonHeursitic(grid: Grid, nodes: set[Node]) -> int:
     """Calculates the Sales Person Heuristic for the given agent"""
     newGrid = nx.Graph()
     newGrid.add_nodes_from(nodes)
-    
+
     newGrid.add_edges_from((node1, node2, {"weight": len(Dijkstra(grid.graph, node1, node2)) - 1})
                           for node1 in nodes
                           for node2 in nodes
@@ -39,7 +40,7 @@ def SalesPersonHeursitic(grid: Grid, nodes: set[Node]) -> int:
 
     return sum(edgeWeights)
 
-def MultiAgentHeuristic(grid: Grid, agentsCoordinates: list[Node], nodes: set[Node]) -> int:
+def MultiAgentHeuristic(grid: Grid, agentsCoordinates: Tuple[Node], nodes: set[Node]) -> int:
     """Calculates the Multi-Agent Heuristic for the given agents"""
     nodes1, nodes2 = set(), set()
     minCut = float('inf')
@@ -47,12 +48,27 @@ def MultiAgentHeuristic(grid: Grid, agentsCoordinates: list[Node], nodes: set[No
         for cut in itertools.combinations(nodes, r):
             nodes1 = set(cut)
             nodes2 = nodes - nodes1
-            minCut = min(minCut, SalesPersonHeursitic(grid, nodes1.union({agentsCoordinates[0]}))
-                          + SalesPersonHeursitic(grid, nodes2.union({agentsCoordinates[1]})))
+            minCut = min(minCut, max(SalesPersonHeursitic(grid, nodes1.union({agentsCoordinates[0]}))
+                          ,SalesPersonHeursitic(grid, nodes2.union({agentsCoordinates[1]}))))
     return minCut
 
 def MultiAgentHeuristic2(grid: Grid, multiAgent: MultiAgent, i: int) -> int:
     """Calculates the Multi-Agent Heuristic for the given agents"""
-    return int(Grid.numOfPackages -
+    return (Grid.numOfPackages -
+               (multiAgent.agent1.score + multiAgent.agent2.score) -
             0.5 * (len(multiAgent.agent1.packages) + len(multiAgent.agent2.packages)) -
             0.25 * len([node for node, t in grid.GetDropdowns() if t <= i]))
+
+def MultiAgentHeuristic3(grid: Grid, agentsCoordinates: Tuple[set[Node]], nodes: set[Tuple[Node]]) -> int:
+    """Calculates the Multi-Agent Heuristic for the given agents"""
+    if (1, 3) in agentsCoordinates[1]:
+        print(f"nodes: {nodes}, agents: {agentsCoordinates}")
+    nodes1, nodes2 = set(), set()
+    minCut = float('inf')
+    for r in range(len(nodes) + 1):
+        for cut in itertools.combinations(nodes, r):
+            nodes1 = set(c[0] for c in cut).union({c[1] for c in cut})
+            nodes2 = set(c[0] for c in nodes - nodes1).union({c[1] for c in nodes - nodes1})
+            minCut = min(minCut, max(SalesPersonHeursitic(grid, nodes1.union(agentsCoordinates[0])),
+                          SalesPersonHeursitic(grid, nodes2.union(agentsCoordinates[1]))))
+    return minCut
