@@ -172,7 +172,7 @@ class MultiAgent(Agent):
                 self.done = True
                 return [], []
 
-            f, maxH, minH, _, nextState, nextNodes1, nextNodes2 = heapq.heappop(MultiAgent.states)
+            f, maxH, minH, nextState, nextNodes1, nextNodes2 = heapq.heappop(MultiAgent.states)
             nextGrid: Grid = nextState[0]
             nextAgent: MultiAgent = nextState[1]
             nextInterference: InterferingAgent = nextState[2]
