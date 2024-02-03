@@ -40,16 +40,21 @@ def SalesPersonHeursitic(grid: Grid, nodes: set[Node]) -> int:
 
     return sum(edgeWeights)
 
-def MultiAgentHeuristic(grid: Grid, agentsCoordinates: Tuple[Node], nodes: set[Node]) -> int:
+def MultiAgentHeuristic1(grid: Grid, agentsCoordinates: Tuple[set[Node]], nodes: set[Tuple[Node]]) -> int:
     """Calculates the Multi-Agent Heuristic for the given agents"""
     nodes1, nodes2 = set(), set()
-    minCut = float('inf')
+    minCut = (float('inf'), float('inf'), set(), set())
     for r in range(len(nodes) + 1):
         for cut in itertools.combinations(nodes, r):
-            nodes1 = set(cut)
-            nodes2 = nodes - nodes1
-            minCut = min(minCut, max(SalesPersonHeursitic(grid, nodes1.union({agentsCoordinates[0]}))
-                          ,SalesPersonHeursitic(grid, nodes2.union({agentsCoordinates[1]}))))
+            nodes1 = set(c[0] for c in cut).union({c[1] for c in cut})
+            nodes2 = set(c[0] for c in nodes - set(cut)).union({c[1] for c in nodes - set(cut)})
+            h1 = SalesPersonHeursitic(grid, nodes1.union(agentsCoordinates[0]))
+            h2 = SalesPersonHeursitic(grid, nodes2.union(agentsCoordinates[1]))
+            maxH = max(h1, h2)
+            minH = min(h1, h2)
+            # h = (0.99 * maxH + 0.01 * minH) if minH != 0 else maxH
+            minCut = min(minCut, (maxH, minH, nodes1, nodes2), key=lambda x: x[0])
+
     return minCut
 
 def MultiAgentHeuristic2(grid: Grid, multiAgent: MultiAgent, i: int) -> int:
@@ -58,17 +63,3 @@ def MultiAgentHeuristic2(grid: Grid, multiAgent: MultiAgent, i: int) -> int:
                (multiAgent.agent1.score + multiAgent.agent2.score) -
             0.5 * (len(multiAgent.agent1.packages) + len(multiAgent.agent2.packages)) -
             0.25 * len([node for node, t in grid.GetDropdowns() if t <= i]))
-
-def MultiAgentHeuristic3(grid: Grid, agentsCoordinates: Tuple[set[Node]], nodes: set[Tuple[Node]]) -> int:
-    """Calculates the Multi-Agent Heuristic for the given agents"""
-    if (1, 3) in agentsCoordinates[1]:
-        print(f"nodes: {nodes}, agents: {agentsCoordinates}")
-    nodes1, nodes2 = set(), set()
-    minCut = float('inf')
-    for r in range(len(nodes) + 1):
-        for cut in itertools.combinations(nodes, r):
-            nodes1 = set(c[0] for c in cut).union({c[1] for c in cut})
-            nodes2 = set(c[0] for c in nodes - nodes1).union({c[1] for c in nodes - nodes1})
-            minCut = min(minCut, max(SalesPersonHeursitic(grid, nodes1.union(agentsCoordinates[0])),
-                          SalesPersonHeursitic(grid, nodes2.union(agentsCoordinates[1]))))
-    return minCut
