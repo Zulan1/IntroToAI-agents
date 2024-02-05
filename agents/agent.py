@@ -27,14 +27,16 @@ class Agent(ABC):
 
     @abstractmethod
     def AgentStep(self, grid: Grid, agents: list[Agent], i: int) -> Edge:
-        """abstract method. implemented differently in inherted classes."""
+        """abstract method. implemented differently in inherited classes."""
 
-    def ProcessStep(self, grid: Grid, action: Edge = None, _: int = 0):
-        """Updates the state of the simulator's according to the step taken by the agent
+    def ProcessStep(self, grid: Grid, action: Edge = None, _: int = 0) -> None:
+        """
+        Process a step in the agent's decision-making process.
 
         Args:
-            grid (Grid): the simulator's grid
-            action (Edge, optional): the action taken. Defaults to None if no-op.
+            grid (Grid): The grid object representing the environment.
+            action (Edge, optional): The action to be taken by the agent. Defaults to None.
+            _ (int, optional): A placeholder parameter for time/iteration number. Defaults to 0.
         """
         if action is None: return
         self._coordinates = action[1]

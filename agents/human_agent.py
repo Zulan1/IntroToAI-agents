@@ -1,6 +1,5 @@
 import sys
 import matplotlib
-matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from matplotlib.widgets import Button
@@ -12,6 +11,8 @@ from agents.search_agent import SearchAgent
 from agents.multi_agent import MultiAgent
 from agents.multi_agent2 import MultiAgent2
 from grid import Grid
+
+matplotlib.use('TkAgg')
 
 class HumanAgent(Agent):
     """class for Human Agent"""
@@ -100,7 +101,7 @@ class HumanAgent(Agent):
                     colors.add('orange')
                 if isinstance(agent, InterferingAgent) and agent.coordinates == node:
                     colors.add('red')
-                if isinstance(agent, SearchAgent):
+                if isinstance(agent, SearchAgent) and not isinstance(agent, InterferingAgent):
                     if node in agent.packages:
                         colors.add('green')
                     if agent.coordinates == node:
@@ -117,7 +118,8 @@ class HumanAgent(Agent):
         nx.draw_networkx_labels(grid.graph, self.pos, ax=self.ax)
         iHandle = mpatches.Patch(color='none', label=f'i = {i}')
         score = ([agent.score for agent in agents if isinstance(agent, SearchAgent)] +\
-            [(agent.agent1.score, agent.agent2.score) for agent in agents if isinstance(agent, MultiAgent) or isinstance(agent, MultiAgent2)])[0]
+            [(agent.agent1.score, agent.agent2.score)
+            for agent in agents if isinstance(agent, MultiAgent) or isinstance(agent, MultiAgent2)])[0]
         scoreHandle = mpatches.Patch(color='none', label=f'score = {score}')
         self.handles[0] = iHandle
         self.handles[1] = scoreHandle

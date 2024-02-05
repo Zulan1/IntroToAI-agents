@@ -129,7 +129,7 @@ class Grid:
                 if package.pickupTime == earliest[1]:
                     earliest[0].add(node)
         return earliest[0]
-    
+
     def GetPickups(self) -> Tuple[Tuple[Node, int]]:
         """Returns the nodes of the packages that need to be picked up
 
@@ -141,13 +141,20 @@ class Grid:
             for package in packages:
                 pickups = pickups + ((node, package.pickupTime),)
         return pickups
-    
+
     def GetDropdowns(self) -> Tuple[Tuple[Node, int]]:
+        """
+        Retrieves the dropdown locations and maximum drop-off times for all packages.
+
+        Returns:
+            A tuple of tuples, where each inner tuple contains a drop-off location (Node)
+            and maximum drop-off time (int).
+        """
         dropdowns = ()
         for packages in self._packages.values():
             for package in packages:
                 dropdowns = dropdowns + ((package.dropoffLoc, package.dropOffMaxTime),)
-        
+
         return dropdowns
 
 class UpdateGridType(Enum):

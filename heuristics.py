@@ -31,14 +31,11 @@ def SalesPersonHeursitic(grid: Grid, nodes: set[Node]) -> int:
     doneEdges = set()
 
     for node1 in nodes:
-        # weights = BFS(grid.graph, node1, nodes - {node1}
-        #               .union({u for u, v in doneEdges if v == node1}
-        #                      .union({v for u, v in doneEdges if u == node1})))
         for node2 in nodes:
             if node1 == node2 or (node2, node1) in doneEdges: continue
             doneEdges.add((node1, node2))
             doneEdges.add((node2, node1))
-            newGrid.add_edge(node1, node2, weight=len(Dijkstra(grid.graph, node1, node2)) - 1)#weights[node2])
+            newGrid.add_edge(node1, node2, weight=len(Dijkstra(grid.graph, node1, node2)) - 1)
 
     return SumWeigthsMST(newGrid)
 
@@ -64,4 +61,3 @@ def MultiAgentHeuristic2(grid: Grid, multiAgent: MultiAgent, i: int) -> int:
                (multiAgent.agent1.score + multiAgent.agent2.score) -
             0.5 * (len(multiAgent.agent1.packages) + len(multiAgent.agent2.packages)) -
             0.25 * len([node for node, t in grid.GetDropdowns() if t <= i]))
-

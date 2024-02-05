@@ -157,33 +157,16 @@ def SumWeigthsMST(g: nx.Graph) -> int:
 
     return sumWeights
 
-def BFS(graph: nx.Graph, start: Node, nodes: set[Node]) -> list[Node]:
-    """Breadth-first search algorithm implementation
+def GetNeighbors(grid: Grid, node: Node) -> set[Node]:
+    """Gets the neighbors of a node
 
     Args:
-        graph (nx.Graph): a graph
-        start (Node): start node
-        nodes: set[Node]: a set of target nodes
+        grid (Grid): the simulator's grid
+        node (Node): a node
 
     Returns:
-        dict[Node, int]: the shortest path between start and end
+        set[Node]: the neighbors of the node
     """
-    nodeCost = {start: 0}
-    visited = {start}
-
-    queue = [(start, 0)]
-    while queue and nodes - visited:
-        node, cost = queue.pop(0)
-        cost += 1
-        adjacentNodes = set(u for u, v in set(graph.edges) if v == node and u not in visited).union(\
-            set(v for u, v in set(graph.edges) if u == node and v not in visited))
-        for adjacent in adjacentNodes:
-            visited.add(adjacent)
-            queue.append((adjacent, cost))
-            if adjacent not in nodes: continue
-            nodeCost[adjacent] = cost
-
-    for node in nodes - visited:
-        nodeCost[node] = float('inf')
-
-    return nodeCost
+    actions = set(edge[1] for edge in grid.graph.edges() if edge[0] == node).union(
+        set(edge[0] for edge in grid.graph.edges() if edge[1] == node))
+    return actions

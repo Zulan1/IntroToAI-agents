@@ -41,4 +41,5 @@ class StupidGreedyAgent(SearchAgent):
             list[Node]: the shortest path to the goal
         """
         from utils import SearchMinPath
+
         return SearchMinPath(grid, self.coordinates, nodes)[1:]

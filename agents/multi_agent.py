@@ -9,14 +9,11 @@ from agents.agent import Agent
 from agents.astar_agent import AStarAgent
 from agents.interfering_agent import InterferingAgent
 
+State = Tuple[Grid, Agent, InterferingAgent]
 ROUND_DIGITS = 5
 
 class MultiAgent(Agent):
     """MultiAgent class"""
-    state = Tuple[Grid, Agent, InterferingAgent]
-    states: list[Tuple[int, int, int, state]] = []
-    visitedStates: set[Tuple[Node, Tuple[Tuple[Node, int]], Tuple[Tuple[Node, int]]], Tuple[Edge]] = set()
-    limit = 0
     l = 1000000
 
     def __init__(self, params: list[str], _: Grid) -> None:
@@ -54,7 +51,26 @@ class MultiAgent(Agent):
         """Returns the dropdowns of the agent"""
         return self.agent1.GetDropdowns() + self.agent2.GetDropdowns()
 
+    def GetActions(self, grid: Grid, nodes: Tuple[set[Node]]) -> Tuple[set[Node]]:
+        """
+        Get the actions for the multi-agent based on the current grid and nodes.
+
+        Args:
+            grid (Grid): The current grid.
+            nodes (Tuple[set[Node]]): The nodes representing the packages.
+
+        Returns:
+            Tuple[set[Node]]: The actions for each agent.
+        """
+
+        actions1 = self.agent1.GetActions(grid)\
+            if (not nodes[0] and not self.agent1.packages) else {self.agent1.coordinates}
+        actions2 = self.agent2.GetActions(grid)\
+            if (not nodes[1] and not self.agent2.packages) else {self.agent2.coordinates}
+        return actions1, actions2
+
     def AgentStep(self, grid: Grid, _: list[Agent], i: int) -> Tuple[Node]:
+        # same as agent step in search agent just for 2 agents
         noOp1 = (self.agent1.coordinates, self.agent1.coordinates)
         noOp2 = (self.agent2.coordinates, self.agent2.coordinates)
 
@@ -91,9 +107,12 @@ class MultiAgent(Agent):
         """Searches for the goal"""
         from heuristics import MultiAgentHeuristic1
 
+        # initiallization of the state
         nextGrid: Grid = grid
         nextAgent: MultiAgent = self
         nextNodes: set[Node] = nodes
+
+        # nextNodes1 and nextNodes2 are determined by how the heuristic divide the packages between the agents
         _, _, nextNodes1, nextNodes2 = MultiAgentHeuristic1(nextGrid,
                                              tuple((set(d[0] for d in nextAgent.agent1.GetDropdowns())
                                                     .union({nextAgent.agent1.coordinates}),
@@ -101,37 +120,34 @@ class MultiAgent(Agent):
                                               .union({nextAgent.agent2.coordinates}))), nextNodes)
 
         nextInterference: InterferingAgent = [agent for agent in agents if isinstance(agent, InterferingAgent)][0]
-        MultiAgent.limit = 0
-        MultiAgent.states = []
-        MultiAgent.visitedStates = set()
+        limit = 0
+        states: list[Tuple[int, int, int, State]] = []
+        visitedStates: set[Tuple[Node, Tuple[Tuple[Node, int]], Tuple[Tuple[Node, int]]], Tuple[Edge]] = set()
         self.cost = i
         iterations = 1
         listT = []
         maxT = float('-inf')
 
+        # main loop of expanding the states of the a* algorithm
         while nextAgent.score != Grid.numOfPackages:
             st = time.time()
-            if self.limit >= self.l:
+
+            if limit >= self.l:
                 return self.ExceededLimit(nextAgent)
-            self.limit += 1
+            limit += 1
 
-            def GetActions(fAgent: AStarAgent, fGrid: Grid, agentNodes: set[Node]) -> set[Node]:
-                if (not agentNodes and not fAgent.packages): return {fAgent.coordinates}
-                actions = set(edge[1] for edge in fGrid.graph.edges() if edge[0] == fAgent.coordinates)\
-                    .union(set(edge[0] for edge in fGrid.graph.edges() if edge[1] == fAgent.coordinates))
-                if any(fAgent.coordinates == p.pickupLoc and fAgent.cost < p.pickupTime
-                       for p in sum(fGrid.packages.values(), [])):
-                    print(f"Agent is at {fAgent.coordinates} and might need to wait")
-                    actions.add(fAgent.coordinates)
-                return actions
-            actions1 = GetActions(nextAgent.agent1, nextGrid, nextNodes1)
-            actions2 = GetActions(nextAgent.agent2, nextGrid, nextNodes2)
+            # get possible actions for each agent
+            actions1, actions2 = nextAgent.GetActions(nextGrid, (nextNodes1, nextNodes2))
 
+            # iterate through every possible combination of the 2 agents
             for action1 in actions1:
                 for action2 in actions2:
+                    # if any package can not be delievered anymore no reason to expand
                     if any(nextAgent.cost > dropOffTime[1]
                        for dropOffTime in set(nextAgent.agent1.GetDropdowns()).union(
                            set(nextAgent.agent2.GetDropdowns()).union(nextGrid.GetDropdowns()))): break
+
+                    # deep copy to simulate without changing other states
                     stateAgent = copy.deepcopy(nextAgent)
                     stateGrid = copy.deepcopy(nextGrid)
                     stateInterference = copy.deepcopy(nextInterference)
@@ -144,44 +160,54 @@ class MultiAgent(Agent):
                                            stateAgent.cost)
                     stateAgent.agent1.seq.append(action1)
                     stateAgent.agent2.seq.append(action2)
-                    visited = (stateGrid.GetPickups(),
-                               (stateAgent.agent1.coordinates, stateAgent.agent1.GetDropdowns()),
-                               (stateAgent.agent2.coordinates, stateAgent.agent2.GetDropdowns()),
-                               stateInterference.coordinates, tuple(stateGrid.fragEdges))
-                    state = (stateGrid, stateAgent, stateInterference)
+
                     maxH, minH, nodes1, nodes2 = MultiAgentHeuristic1(stateGrid,
                                              tuple((set(d[0] for d in stateAgent.agent1.GetDropdowns())
                                                     .union({stateAgent.agent1.coordinates}),
                                               set(d[0] for d in stateAgent.agent2.GetDropdowns())
                                               .union({stateAgent.agent2.coordinates}))), nextNodes)
                     f = stateAgent.cost + maxH
-                    if visited in MultiAgent.visitedStates and\
+
+                    # check if action1 + action2 changed anything in the state
+                    visited = (stateGrid.GetPickups(),
+                               (stateAgent.agent1.coordinates, stateAgent.agent1.GetDropdowns()),
+                               (stateAgent.agent2.coordinates, stateAgent.agent2.GetDropdowns()))
+                    if visited in visitedStates and\
                     (action1 != nextAgent.agent1.coordinates or action2 != nextAgent.agent2.coordinates): continue
-                    heapq.heappush(MultiAgent.states, (f, maxH, minH, 1 / iterations, state, nodes1, nodes2))
+
+                    # save the new states to the heap
+                    state = (stateGrid, stateAgent, stateInterference)
+                    heapq.heappush(states, (f, maxH, minH, 1 / iterations, state, nodes1, nodes2))
                     iterations += 1
-                    MultiAgent.visitedStates.add(visited)
+                    visitedStates.add(visited)
 
             T = round(time.time() - st, ROUND_DIGITS)
             listT.append(T)
             maxT = max(maxT, T)
 
-            if not MultiAgent.states:
+            # in case every node was visited and the state didn't change so problem is probably unsolveable
+            if not states:
                 print("no states left, problem might be unsolveable.")
                 self.done = True
                 return [], []
 
-            f, maxH, minH, _, nextState, nextNodes1, nextNodes2 = heapq.heappop(MultiAgent.states)
+            # pop the next state and setup for the next iteration
+            f, maxH, minH, _, nextState, nextNodes1, nextNodes2 = heapq.heappop(states)
             nextGrid: Grid = nextState[0]
             nextAgent: MultiAgent = nextState[1]
             nextInterference: InterferingAgent = nextState[2]
             nextNodes: set[Node] = nextAgent.FormulateGoal(nextGrid, None)
+
+            # should not reach here, if there's no pickups nor dropoffs then the agent should be done
             assert nextNodes or nextAgent.GetDropdowns() or nextAgent.score == Grid.numOfPackages,\
             "bug! no nodes left and not done"
+
+            # some debug info
             print(f"This expand took T={T} seconds, longest expansion took maxT={maxT} seconds")
             print(f"avg listT={round(sum(listT) / len(listT), ROUND_DIGITS)} seconds, Total time: {sum(listT)} seconds")
             print(f'popped f: {f}, maxH: {maxH}, minH: {minH}, g: {nextAgent.cost}')
             print(f"path1: {nextAgent.agent1.seq}\npath2: {nextAgent.agent2.seq}")
-            print(f"limit: {self.limit}")
+            print(f"limit: {limit}")
             print(f"pickups: {nextGrid.GetPickups()}")
             print(f"dropdowns1: {nextAgent.agent1.GetDropdowns()}, dropdowns2: {nextAgent.agent2.GetDropdowns()}")
             print(f"future dropdowns: {nextGrid.GetDropdowns()}")
