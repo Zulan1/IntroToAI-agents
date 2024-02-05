@@ -5,6 +5,7 @@ from utils import InitGrid
 from agents.agent import Agent
 from agents.astar_agent import AStarAgent
 from agents.rtastar_agent import RTAStarAgent
+from agents.human_agent import HumanAgent
 
 
 def Main():
@@ -30,6 +31,7 @@ def Main():
     i = 0
     while any(agent.done is not True for agent in agents) and i <= Agent.lastDropOffTime:
         for agent in agents:
+            if agent.done and not isinstance(agent, HumanAgent): continue
             action = agent.AgentStep(grid, agents, i)
             agent.ProcessStep(grid, action, i)
         i += 1

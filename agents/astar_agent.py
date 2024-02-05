@@ -50,6 +50,62 @@ class AStarAgent(SearchAgent):
             actions.add(self.coordinates)
         return actions
 
+    def Expand(self, grid: Grid, interfering: InterferingAgent, nodes: set[Node], iterations: list[int],
+               actions: set[Node], states: list[Tuple[int, int, int, State]],
+               visitedStates: set[Tuple[Node, Tuple[Tuple[Node, int]], Tuple[Tuple[Node, int]], Tuple[Edge]]]) -> None:
+        """
+        Expands the current state by generating and adding new states to the state space.
+
+        Args:
+            grid (Grid): The grid representing the environment.
+            interfering (InterferingAgent): The interfering agent in the environment.
+            nodes (set[Node]): The set of nodes in the environment.
+            actions (set[Node]): The set of possible actions from the current state.
+            states (list[Tuple[int, int, int, State]]): The list of states in the state space.
+            visitedStates (set[Tuple[Node, Tuple[Tuple[Node, int]], Tuple[Tuple[Node, int]], Tuple[Edge]]]):
+                The set of visited states to avoid duplicates.
+
+        Returns:
+            None
+        """
+        from heuristics import SalesPersonHeursitic
+
+        for action in actions:
+            # if any package is already expired, no point in expanding the state
+            if any(self.cost > dropOffTime[1]
+                    for dropOffTime in set(self.GetDropdowns()).union(grid.GetDropdowns())): return
+
+            # create deep copies of agents so we don't affect the current state
+            stateAgent = copy.deepcopy(self)
+            stateGrid = copy.deepcopy(grid)
+            stateInterference = copy.deepcopy(interfering)
+
+            # process the next state
+            stateInterference.ProcessStep(stateGrid,
+                                            stateInterference.AgentStep(stateGrid, None, None),
+                                            None)
+            stateAgent.cost += 1
+            stateAgent.ProcessStep(stateGrid, (self.coordinates, action), stateAgent.cost)
+            stateAgent.seq.append(action)
+
+            # check if the current move mwas already tried in the exact same state
+            visited = (stateAgent.coordinates,
+                        stateGrid.GetPickups(), stateAgent.GetDropdowns(),
+                        tuple(stateGrid.fragEdges))
+            if visited in visitedStates and action != self.coordinates: continue
+
+            # create the state tuple and add it to the heap
+            state = (stateGrid, stateAgent, stateInterference)
+
+            # calculate the heuristic and the f value
+            h = SalesPersonHeursitic(stateGrid, nodes.union({stateAgent.coordinates}))
+            f = stateAgent.cost + h
+
+            # add the state to the heap prio lower f value then lower h value then lifo (arbitrary)
+            heapq.heappush(states, (f, h, 1 / iterations[0], state))
+            iterations[0] += 1
+            visitedStates.add(visited)
+
 
     def Search(self, grid: Grid, nodes: set[Node], agents: list[Agent], i: int) -> list[Node]:
         """Searches for the shortest path to the goal
@@ -61,8 +117,6 @@ class AStarAgent(SearchAgent):
         Returns:
             list[Node]: the shortest path to the goal
         """
-        from heuristics import SalesPersonHeursitic
-
         # initiallization of the state
         nextGrid: Grid = grid
         nextAgent: AStarAgent = self
@@ -73,7 +127,7 @@ class AStarAgent(SearchAgent):
         limit = 0
         listT = []
         self.cost = i
-        iterations = 1
+        iterations = [1]
         maxT = float('-inf')
 
         # main loop of expanding the states of the a* algorithm
@@ -88,42 +142,7 @@ class AStarAgent(SearchAgent):
             # possible nodes to move to
             actions = nextAgent.GetActions(nextGrid)
 
-            # iterate over the possible actions i.e. expand this node
-            for action in actions:
-                # if any package is already expired, no point in expanding the state
-                if any(nextAgent.cost > dropOffTime[1]
-                       for dropOffTime in set(nextAgent.GetDropdowns()).union(nextGrid.GetDropdowns())): break
-
-                # create deep copies of agents so we don't affect the current state
-                stateAgent = copy.deepcopy(nextAgent)
-                stateGrid = copy.deepcopy(nextGrid)
-                stateInterference = copy.deepcopy(nextInterference)
-
-                # process the next state
-                stateInterference.ProcessStep(stateGrid,
-                                              stateInterference.AgentStep(stateGrid, None, None),
-                                              None)
-                stateAgent.cost += 1
-                stateAgent.ProcessStep(stateGrid, (nextAgent.coordinates, action), stateAgent.cost)
-                stateAgent.seq.append(action)
-
-                # create the state tuple and add it to the heap
-                state = (stateGrid, stateAgent, stateInterference)
-
-                # calculate the heuristic and the f value
-                h = SalesPersonHeursitic(stateGrid, nextNodes.union({stateAgent.coordinates}))
-                f = stateAgent.cost + h
-
-                # check if the current move mwas already tried in the exact same state
-                visited = (stateAgent.coordinates,
-                           stateGrid.GetPickups(), stateAgent.GetDropdowns(),
-                           tuple(stateGrid.fragEdges))
-                if visited in visitedStates and action != nextAgent.coordinates: continue
-
-                # add the state to the heap prio lower f value then lower h value then lifo (arbitrary)
-                heapq.heappush(states, (f, h, 1 / iterations, state))
-                iterations += 1
-                visitedStates.add(visited)
+            nextAgent.Expand(nextGrid, nextInterference, nextNodes, iterations, actions, states, visitedStates)
 
             # check how long this node expansion took
             T = round(time.time() - st, ROUND_DIGITS)
@@ -138,6 +157,12 @@ class AStarAgent(SearchAgent):
 
             # pop the next state and setup for the next iteration
             f, h, _, nextState = heapq.heappop(states)
+
+            if f == float('inf'):
+                print("no states left, problem might be unsolveable.")
+                self.done = True
+                return []
+
             nextGrid: Grid = nextState[0]
             nextAgent: AStarAgent = nextState[1]
             nextInterference: InterferingAgent = nextState[2]
@@ -148,7 +173,7 @@ class AStarAgent(SearchAgent):
 
         # some debug info
         print(f"This expand took T={T} seconds, longest expansion took maxT={maxT} seconds")
-        print(f"avg listT={round(sum(listT) / len(listT), ROUND_DIGITS)} seconds, Total time: {sum(listT)} seconds")
+        print(f"avg T={round(sum(listT) / len(listT), ROUND_DIGITS)} seconds, Total time: {sum(listT)} seconds")
         print(f'popped f: {f}, h: {h}, g: {nextAgent.cost}')
         print(f"path: {nextAgent.seq}")
         print(f"limit: {limit}")

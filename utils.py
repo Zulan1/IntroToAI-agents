@@ -78,6 +78,8 @@ def SearchMinPath(grid: Grid, start: Node, nodes: set[Node]) -> list[Node]:
     minPath = None
     for node in nodes:
         path = Dijkstra(grid.graph, start, node)
+        if path == float('inf'):
+            raise ValueError(f"no path between {start} and {node}")
         minPath = ComparePaths(minPath, path)
     return list(minPath)
 
@@ -95,7 +97,7 @@ def ComparePaths(path0: list[Node], path1: list[Node]) -> list[Node]:
         return path1
     if path1 is None or (len(path0) < len(path1)):
         return path0
-    return min(path0, path1, key=lambda path: (path[-1].x, path[-1].y))
+    return min(path0, path1, key=lambda path: (path[-1][0], path[-1][1]))
 
 def Dijkstra(g: nx.Graph, start: Node, end: Node) -> list[Node]:
     """dijkstra algorithm implementation
@@ -108,6 +110,9 @@ def Dijkstra(g: nx.Graph, start: Node, end: Node) -> list[Node]:
     Returns:
         list[Node]: the shortest path between start and end
     """
+    if not nx.has_path(g, start, end):
+        return float('inf')
+
     dist = {start: 0}
     prev = {}
     q = set(g.nodes())

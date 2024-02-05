@@ -6,10 +6,10 @@ from typing import Tuple
 from type_aliases import Node, Edge
 from grid import Grid
 from agents.agent import Agent
-from agents.astar_agent import AStarAgent
+from agents.astar_agent import AStarAgent, State
 from agents.interfering_agent import InterferingAgent
 
-State = Tuple[Grid, Agent, InterferingAgent]
+
 ROUND_DIGITS = 5
 
 class MultiAgent(Agent):
@@ -64,9 +64,18 @@ class MultiAgent(Agent):
         """
 
         actions1 = self.agent1.GetActions(grid)\
-            if (not nodes[0] and not self.agent1.packages) else {self.agent1.coordinates}
+            if (nodes[0] or self.agent1.packages) else {self.agent1.coordinates}
         actions2 = self.agent2.GetActions(grid)\
-            if (not nodes[1] and not self.agent2.packages) else {self.agent2.coordinates}
+            if (nodes[1] or self.agent2.packages) else {self.agent2.coordinates}
+
+        if actions1 == {self.agent1.coordinates} or actions2 == {self.agent2.coordinates}:
+            return actions1, actions2
+
+        neighborEdge = (self.agent1.coordinates, self.agent2.coordinates)
+        if neighborEdge in grid.graph.edges or neighborEdge[::-1] in grid.graph.edges():
+            actions1.add(self.agent1.coordinates)
+            actions2.add(self.agent2.coordinates)
+
         return actions1, actions2
 
     def AgentStep(self, grid: Grid, _: list[Agent], i: int) -> Tuple[Node]:
@@ -103,16 +112,115 @@ class MultiAgent(Agent):
         self.agent1.ProcessStep(grid, action[0], _)
         self.agent2.ProcessStep(grid, action[1], _)
 
-    def Search(self, grid: Grid, nodes: set[Node], agents: list[Agent], i: int) -> Tuple[list[Node]]:
-        """Searches for the goal"""
+    def Expand(self, grid: Grid, interfering: InterferingAgent, nodes: set[Node], iterations: list[int],
+               actions: set[Node], states: list[Tuple[int, int, int, State]],
+               visitedStates: set[Tuple[Node, Tuple[Tuple[Node, int]], Tuple[Tuple[Node, int]], Tuple[Edge]]]) -> None:
+        """
+        Expands the current state by generating new states based on possible actions of the agents.
+
+        Args:
+            grid (Grid): The grid representing the environment.
+            interfering (InterferingAgent): The interfering agent.
+            nodes (set[Node]): The set of nodes in the grid.
+            iterations (list[int]): The list of iteration counts.
+            actions (set[Node]): The set of possible actions for the agents.
+            states (list[Tuple[int, int, int, State]]): The list of states.
+            visitedStates (set[Tuple[Node, Tuple[Tuple[Node, int]], Tuple[Tuple[Node, int]], Tuple[Edge]]]): 
+                The set of visited states.
+
+        Returns:
+            None
+        """
+        # iterate through every possible combination of the 2 agents
+        actions1, actions2 = actions
+        for action1 in actions1:
+            for action2 in actions2:
+                # if any package can not be delievered anymore no reason to expand
+                if any(self.cost > dropOffTime[1]
+                    for dropOffTime in set(self.agent1.GetDropdowns()).union(
+                        set(self.agent2.GetDropdowns()).union(grid.GetDropdowns()))): break
+
+                if ((self.agent1.coordinates, action1) == (self.agent2.coordinates, action2) or\
+                    (self.agent1.coordinates, action1) == (action2, self.agent2.coordinates)) and not\
+                        (action1 == self.agent1.coordinates or actions2 == self.agent2.coordinates): continue
+
+                # deep copy to simulate without changing other states
+                stateAgent = copy.deepcopy(self)
+                stateGrid = copy.deepcopy(grid)
+                stateInterference = copy.deepcopy(interfering)
+                stateInterference.ProcessStep(stateGrid,
+                                                stateInterference.AgentStep(stateGrid, None, None), stateAgent.cost)
+                stateAgent.cost += 1
+                stateAgent.ProcessStep(stateGrid,
+                                        ((stateAgent.agent1.coordinates, action1),
+                                        (stateAgent.agent2.coordinates, action2)),
+                                        stateAgent.cost)
+                stateAgent.agent1.seq.append(action1)
+                stateAgent.agent2.seq.append(action2)
+
+                # check if action1 + action2 changed anything in the state
+                visited = (stateGrid.GetPickups(),
+                            (stateAgent.agent1.coordinates, stateAgent.agent1.GetDropdowns()),
+                            (stateAgent.agent2.coordinates, stateAgent.agent2.GetDropdowns()))
+                if visited in visitedStates and\
+                (action1 != self.agent1.coordinates or action2 != self.agent2.coordinates): continue
+
+                stateAgent.HeapPush(states, stateGrid, stateInterference, iterations, nodes)
+
+                visitedStates.add(visited)
+
+    def HeapPush(self, states: list[int, int, int, int, State], grid: Grid, interfering: InterferingAgent,
+                 iterations: list[int], nodes: set[Node]) -> None:
+        """
+        Pushes a state onto the heap.
+
+        Args:
+            states (list[int, int, int, int, State]): The list of states.
+            state (State): The state to push onto the heap.
+            iterations (list[int]): The list of iteration counts.
+            visited (Tuple[Node, Tuple[Tuple[Node, int]], Tuple[Tuple[Node, int]]]): The visited state.
+            visitedStates (set[Tuple[Node, Tuple[Tuple[Node, int]], Tuple[Tuple[Node, int]]], Tuple[Edge]]): 
+                The set of visited states.
+
+        Returns:
+            None
+        """
         from heuristics import MultiAgentHeuristic1
 
-        # initiallization of the state
+        maxH, minH, nodes1, nodes2 = MultiAgentHeuristic1(grid,
+                                        tuple((set(d[0] for d in self.agent1.GetDropdowns())
+                                            .union({self.agent1.coordinates}),
+                                        set(d[0] for d in self.agent2.GetDropdowns())
+                                        .union({self.agent2.coordinates}))), nodes)
+        f = self.cost + maxH
+
+        # save the new states to the heap
+        state = (grid, self, interfering)
+        heapq.heappush(states, (f, maxH, minH, 1 / iterations[0], state, nodes1, nodes2))
+        iterations[0] += 1
+        return True
+
+    def Search(self, grid: Grid, nodes: set[Node], agents: list[Agent], i: int) -> Tuple[list[Node]]:
+        """
+        Searches for the goal.
+
+        Args:
+            grid (Grid): The grid representing the environment.
+            nodes (set[Node]): The set of nodes representing the goal.
+            agents (list[Agent]): The list of agents.
+            i (int): The iteration count.
+
+        Returns:
+            Tuple[list[Node]]: The list of actions to reach the goal.
+        """
+        from heuristics import MultiAgentHeuristic1
+
+        # initialization of the state
         nextGrid: Grid = grid
         nextAgent: MultiAgent = self
         nextNodes: set[Node] = nodes
 
-        # nextNodes1 and nextNodes2 are determined by how the heuristic divide the packages between the agents
+        # nextNodes1 and nextNodes2 are determined by how the heuristic divides the packages between the agents
         _, _, nextNodes1, nextNodes2 = MultiAgentHeuristic1(nextGrid,
                                              tuple((set(d[0] for d in nextAgent.agent1.GetDropdowns())
                                                     .union({nextAgent.agent1.coordinates}),
@@ -124,7 +232,7 @@ class MultiAgent(Agent):
         states: list[Tuple[int, int, int, State]] = []
         visitedStates: set[Tuple[Node, Tuple[Tuple[Node, int]], Tuple[Tuple[Node, int]]], Tuple[Edge]] = set()
         self.cost = i
-        iterations = 1
+        iterations = [1]
         listT = []
         maxT = float('-inf')
 
@@ -137,49 +245,9 @@ class MultiAgent(Agent):
             limit += 1
 
             # get possible actions for each agent
-            actions1, actions2 = nextAgent.GetActions(nextGrid, (nextNodes1, nextNodes2))
+            actions = nextAgent.GetActions(nextGrid, (nextNodes1, nextNodes2))
 
-            # iterate through every possible combination of the 2 agents
-            for action1 in actions1:
-                for action2 in actions2:
-                    # if any package can not be delievered anymore no reason to expand
-                    if any(nextAgent.cost > dropOffTime[1]
-                       for dropOffTime in set(nextAgent.agent1.GetDropdowns()).union(
-                           set(nextAgent.agent2.GetDropdowns()).union(nextGrid.GetDropdowns()))): break
-
-                    # deep copy to simulate without changing other states
-                    stateAgent = copy.deepcopy(nextAgent)
-                    stateGrid = copy.deepcopy(nextGrid)
-                    stateInterference = copy.deepcopy(nextInterference)
-                    stateInterference.ProcessStep(stateGrid,
-                                                  stateInterference.AgentStep(stateGrid, None, None), stateAgent.cost)
-                    stateAgent.cost += 1
-                    stateAgent.ProcessStep(stateGrid,
-                                           ((stateAgent.agent1.coordinates, action1),
-                                            (stateAgent.agent2.coordinates, action2)),
-                                           stateAgent.cost)
-                    stateAgent.agent1.seq.append(action1)
-                    stateAgent.agent2.seq.append(action2)
-
-                    maxH, minH, nodes1, nodes2 = MultiAgentHeuristic1(stateGrid,
-                                             tuple((set(d[0] for d in stateAgent.agent1.GetDropdowns())
-                                                    .union({stateAgent.agent1.coordinates}),
-                                              set(d[0] for d in stateAgent.agent2.GetDropdowns())
-                                              .union({stateAgent.agent2.coordinates}))), nextNodes)
-                    f = stateAgent.cost + maxH
-
-                    # check if action1 + action2 changed anything in the state
-                    visited = (stateGrid.GetPickups(),
-                               (stateAgent.agent1.coordinates, stateAgent.agent1.GetDropdowns()),
-                               (stateAgent.agent2.coordinates, stateAgent.agent2.GetDropdowns()))
-                    if visited in visitedStates and\
-                    (action1 != nextAgent.agent1.coordinates or action2 != nextAgent.agent2.coordinates): continue
-
-                    # save the new states to the heap
-                    state = (stateGrid, stateAgent, stateInterference)
-                    heapq.heappush(states, (f, maxH, minH, 1 / iterations, state, nodes1, nodes2))
-                    iterations += 1
-                    visitedStates.add(visited)
+            nextAgent.Expand(nextGrid, nextInterference, nextNodes, iterations, actions, states, visitedStates)
 
             T = round(time.time() - st, ROUND_DIGITS)
             listT.append(T)
@@ -193,6 +261,12 @@ class MultiAgent(Agent):
 
             # pop the next state and setup for the next iteration
             f, maxH, minH, _, nextState, nextNodes1, nextNodes2 = heapq.heappop(states)
+
+            if f == float('inf'):
+                print("no states left, problem might be unsolveable.")
+                self.done = True
+                return [], []
+
             nextGrid: Grid = nextState[0]
             nextAgent: MultiAgent = nextState[1]
             nextInterference: InterferingAgent = nextState[2]
@@ -204,7 +278,7 @@ class MultiAgent(Agent):
 
             # some debug info
             print(f"This expand took T={T} seconds, longest expansion took maxT={maxT} seconds")
-            print(f"avg listT={round(sum(listT) / len(listT), ROUND_DIGITS)} seconds, Total time: {sum(listT)} seconds")
+            print(f"avg T={round(sum(listT) / len(listT), ROUND_DIGITS)} seconds, Total time: {sum(listT)} seconds")
             print(f'popped f: {f}, maxH: {maxH}, minH: {minH}, g: {nextAgent.cost}')
             print(f"path1: {nextAgent.agent1.seq}\npath2: {nextAgent.agent2.seq}")
             print(f"limit: {limit}")

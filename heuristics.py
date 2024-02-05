@@ -35,7 +35,10 @@ def SalesPersonHeursitic(grid: Grid, nodes: set[Node]) -> int:
             if node1 == node2 or (node2, node1) in doneEdges: continue
             doneEdges.add((node1, node2))
             doneEdges.add((node2, node1))
-            newGrid.add_edge(node1, node2, weight=len(Dijkstra(grid.graph, node1, node2)) - 1)
+            weight = Dijkstra(grid.graph, node1, node2)
+            if weight != float('inf'):
+                weight = len(weight) - 1
+            newGrid.add_edge(node1, node2, weight=weight)
 
     return SumWeigthsMST(newGrid)
 

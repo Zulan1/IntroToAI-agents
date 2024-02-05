@@ -1,15 +1,9 @@
 from agents.search_agent import SearchAgent
 from grid import Grid
 from type_aliases import Node
-from package import Package
 
 class StupidGreedyAgent(SearchAgent):
     """class for Stupid Greedy Agent"""
-
-    def __init__(self, params: list[str], _: Grid):
-        super().__init__(params, _)
-        self._packages: dict[Node, set[Package]] = {}
-        self.seq = []
 
     def FormulateGoal(self, grid: Grid, i: int) -> set[Node]:
         """Formulates the goal of the agent
