@@ -89,7 +89,6 @@ class MultiAgent2(Agent):
     def Search(self, grid: Grid, nodes: set[Node], agents: list[Agent], i: int) -> Tuple[list[Node]]:
         """Searches for the goal"""
         from heuristics import MultiAgentHeuristic2
-        from utils import Dijkstra
 
         nextGrid: Grid = grid
         nextAgent: MultiAgent2 = self
@@ -114,7 +113,7 @@ class MultiAgent2(Agent):
                 if (not fGrid.GetPickups() and not fAgent.packages): return {fAgent.coordinates}
                 actions = set(edge[1] for edge in fGrid.graph.edges() if edge[0] == fAgent.coordinates)\
                     .union(set(edge[0] for edge in fGrid.graph.edges() if edge[1] == fAgent.coordinates))
-                if any(len(Dijkstra(fGrid.graph, fAgent.coordinates, p.pickupLoc)) - 1 < p.pickupTime - fAgent.cost
+                if any(fAgent.coordinates == p.pickupLoc and fAgent.cost < p.pickupTime
                        for p in sum(fGrid.packages.values(), [])):
                     print(f"Agent is at {fAgent.coordinates} and might need to wait")
                     actions.add(fAgent.coordinates)
@@ -137,7 +136,7 @@ class MultiAgent2(Agent):
                                            ((stateAgent.agent1.coordinates, action1),
                                             (stateAgent.agent2.coordinates, action2)),
                                            stateAgent.cost)
-                    stateAgent.agent1.seq.append(action1)
+                    stateAgent.agent1.seq.append(action1) # make in property
                     stateAgent.agent2.seq.append(action2)
                     visited = (stateGrid.GetPickups(),
                                (stateAgent.agent1.coordinates, stateAgent.agent1.GetDropdowns()),
@@ -146,9 +145,6 @@ class MultiAgent2(Agent):
                     state = (stateGrid, stateAgent, stateInterference)
                     h = MultiAgentHeuristic2(stateGrid, stateAgent, stateAgent.cost)
                     f = stateAgent.cost + h
-                    if stateAgent.agent2.coordinates == nextAgent.agent2.coordinates == (1, 3):
-                        print(f"nextNodes: {nextNodes}")
-                        print(f"h: {h}, f: {f}" + '\n'*10)
                     if visited in MultiAgent2.visitedStates and\
                     (action1 != nextAgent.agent1.coordinates or action2 != nextAgent.agent2.coordinates): continue
                     heapq.heappush(MultiAgent2.states, (f, h, 1 / iterations, state))

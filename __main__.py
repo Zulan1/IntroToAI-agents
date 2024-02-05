@@ -1,6 +1,5 @@
 import configparser
 from os import path
-import matplotlib.pyplot as plt
 from grid import Grid
 from utils import InitGrid
 from agents.agent import Agent

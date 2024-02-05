@@ -50,7 +50,7 @@ class Package:
             int: time
         """
         return self._dropOffMaxTime
-    
+
     def __eq__(self, other: Package) -> bool:
         """checks if two packages are equal
 

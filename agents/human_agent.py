@@ -10,6 +10,7 @@ from agents.agent import Agent
 from agents.interfering_agent import InterferingAgent
 from agents.search_agent import SearchAgent
 from agents.multi_agent import MultiAgent
+from agents.multi_agent2 import MultiAgent2
 from grid import Grid
 
 class HumanAgent(Agent):
@@ -17,7 +18,6 @@ class HumanAgent(Agent):
 
     def __init__(self, params:list[str], grid: Grid):
         super().__init__(params, grid)
-        self.init = False
         fig, ax = plt.subplots(figsize=(16, 9))
         self.ax = ax
         self.pos = {(x, y): (x, -y) for x, y in grid.graph.nodes()}
@@ -105,7 +105,7 @@ class HumanAgent(Agent):
                         colors.add('green')
                     if agent.coordinates == node:
                         colors.add('#0000FF')
-                if isinstance(agent, MultiAgent):
+                if isinstance(agent, MultiAgent) or isinstance(agent, MultiAgent2):
                     if node in agent.agent1.packages or node in agent.agent2.packages:
                         colors.add('green')
                     if agent.agent1.coordinates == node or agent.agent2.coordinates == node:
@@ -117,7 +117,7 @@ class HumanAgent(Agent):
         nx.draw_networkx_labels(grid.graph, self.pos, ax=self.ax)
         iHandle = mpatches.Patch(color='none', label=f'i = {i}')
         score = ([agent.score for agent in agents if isinstance(agent, SearchAgent)] +\
-            [(agent.agent1.score, agent.agent2.score) for agent in agents if isinstance(agent, MultiAgent)])[0]
+            [(agent.agent1.score, agent.agent2.score) for agent in agents if isinstance(agent, MultiAgent) or isinstance(agent, MultiAgent2)])[0]
         scoreHandle = mpatches.Patch(color='none', label=f'score = {score}')
         self.handles[0] = iHandle
         self.handles[1] = scoreHandle

@@ -90,7 +90,6 @@ class MultiAgent(Agent):
     def Search(self, grid: Grid, nodes: set[Node], agents: list[Agent], i: int) -> Tuple[list[Node]]:
         """Searches for the goal"""
         from heuristics import MultiAgentHeuristic1
-        from utils import Dijkstra
 
         nextGrid: Grid = grid
         nextAgent: MultiAgent = self
@@ -120,7 +119,7 @@ class MultiAgent(Agent):
                 if (not agentNodes and not fAgent.packages): return {fAgent.coordinates}
                 actions = set(edge[1] for edge in fGrid.graph.edges() if edge[0] == fAgent.coordinates)\
                     .union(set(edge[0] for edge in fGrid.graph.edges() if edge[1] == fAgent.coordinates))
-                if any(len(Dijkstra(fGrid.graph, fAgent.coordinates, p.pickupLoc)) - 1 < p.pickupTime - fAgent.cost
+                if any(fAgent.coordinates == p.pickupLoc and fAgent.cost < p.pickupTime
                        for p in sum(fGrid.packages.values(), [])):
                     print(f"Agent is at {fAgent.coordinates} and might need to wait")
                     actions.add(fAgent.coordinates)
@@ -150,7 +149,6 @@ class MultiAgent(Agent):
                                (stateAgent.agent2.coordinates, stateAgent.agent2.GetDropdowns()),
                                stateInterference.coordinates, tuple(stateGrid.fragEdges))
                     state = (stateGrid, stateAgent, stateInterference)
-                    # h = MultiAgentHeuristic1(stateGrid, stateAgent, stateAgent.cost)
                     maxH, minH, nodes1, nodes2 = MultiAgentHeuristic1(stateGrid,
                                              tuple((set(d[0] for d in stateAgent.agent1.GetDropdowns())
                                                     .union({stateAgent.agent1.coordinates}),
@@ -159,7 +157,7 @@ class MultiAgent(Agent):
                     f = stateAgent.cost + maxH
                     if visited in MultiAgent.visitedStates and\
                     (action1 != nextAgent.agent1.coordinates or action2 != nextAgent.agent2.coordinates): continue
-                    heapq.heappush(MultiAgent.states, (f, maxH, 1 / iterations, state, nodes1, nodes2))
+                    heapq.heappush(MultiAgent.states, (f, maxH, minH, 1 / iterations, state, nodes1, nodes2))
                     iterations += 1
                     MultiAgent.visitedStates.add(visited)
 
@@ -172,7 +170,7 @@ class MultiAgent(Agent):
                 self.done = True
                 return [], []
 
-            f, maxH, minH, nextState, nextNodes1, nextNodes2 = heapq.heappop(MultiAgent.states)
+            f, maxH, minH, _, nextState, nextNodes1, nextNodes2 = heapq.heappop(MultiAgent.states)
             nextGrid: Grid = nextState[0]
             nextAgent: MultiAgent = nextState[1]
             nextInterference: InterferingAgent = nextState[2]

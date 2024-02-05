@@ -8,6 +8,7 @@ from agents.greedy_agent import GreedyAgent
 from agents.astar_agent import AStarAgent
 from agents.rtastar_agent import RTAStarAgent
 from agents.multi_agent import MultiAgent
+from agents.multi_agent2 import MultiAgent2
 from type_aliases import Node
 
 agent_classes = {
@@ -17,7 +18,8 @@ agent_classes = {
     AgentType.RTA_STAR.value: RTAStarAgent,
     AgentType.HUMAN.value: HumanAgent,
     AgentType.INTERFERING.value: InterferingAgent,
-    AgentType.MULTI_AGNENT.value: MultiAgent
+    AgentType.MULTI_AGNENT.value: MultiAgent,
+    AgentType.MULTI_AGNENT2.value: MultiAgent2,
 }
 
 def InitGrid(initFilePath: str) -> (Grid, list[Agent]):
@@ -127,7 +129,7 @@ def Dijkstra(g: nx.Graph, start: Node, end: Node) -> list[Node]:
     path.insert(0, u)
     return path
 
-def MinimumSpanningTree(g: nx.Graph) -> nx.Graph:
+def SumWeigthsMST(g: nx.Graph) -> int:
     """Kruksal's minimum spanning tree algorithm implementation
 
     Args:
@@ -138,9 +140,50 @@ def MinimumSpanningTree(g: nx.Graph) -> nx.Graph:
     """
     mst = nx.Graph()
     mst.add_nodes_from(g.nodes)
-    edges = sorted(g.edges(data=True), key=lambda edge: edge[2].get('weight', 1))
-    
-    for edge in edges:
-        if not nx.has_path(mst, edge[0], edge[1]):
-            mst.add_edge(edge[0], edge[1], weight=edge[2].get('weight', 1))
-    return mst
+
+    edges = []
+    for u, v in set(g.edges()):
+        weight = g[u][v]['weight']
+        edges.append((u, v, weight))
+
+    edges = sorted(edges, key=lambda edge: edge[2])
+
+    sumWeights = 0
+
+    for u, v, w in edges:
+        if nx.has_path(mst, u, v): continue
+        mst.add_edge(u, v, weight=w)
+        sumWeights += w
+
+    return sumWeights
+
+def BFS(graph: nx.Graph, start: Node, nodes: set[Node]) -> list[Node]:
+    """Breadth-first search algorithm implementation
+
+    Args:
+        graph (nx.Graph): a graph
+        start (Node): start node
+        nodes: set[Node]: a set of target nodes
+
+    Returns:
+        dict[Node, int]: the shortest path between start and end
+    """
+    nodeCost = {start: 0}
+    visited = {start}
+
+    queue = [(start, 0)]
+    while queue and nodes - visited:
+        node, cost = queue.pop(0)
+        cost += 1
+        adjacentNodes = set(u for u, v in set(graph.edges) if v == node and u not in visited).union(\
+            set(v for u, v in set(graph.edges) if u == node and v not in visited))
+        for adjacent in adjacentNodes:
+            visited.add(adjacent)
+            queue.append((adjacent, cost))
+            if adjacent not in nodes: continue
+            nodeCost[adjacent] = cost
+
+    for node in nodes - visited:
+        nodeCost[node] = float('inf')
+
+    return nodeCost
