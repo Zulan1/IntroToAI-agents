@@ -271,17 +271,17 @@ class MultiAgent(Agent):
             assert nextNodes or nextAgent.GetDropdowns() or nextAgent.score == Grid.numOfPackages,\
             "bug! no nodes left and not done"
 
-            # some debug info
-            print(f"This expand took T={T} seconds, longest expansion took maxT={maxT} seconds")
-            print(f"avg T={round(sum(listT) / len(listT), ROUND_DIGITS)} seconds, Total time: {sum(listT)} seconds")
-            print(f'popped f: {f}, maxH: {maxH}, minH: {minH}, g: {nextAgent.cost}')
-            print(f"path1: {nextAgent.agent1.seq}\npath2: {nextAgent.agent2.seq}")
-            print(f"limit: {limit}")
-            print(f"pickups: {nextGrid.GetPickups()}")
-            print(f"dropdowns1: {nextAgent.agent1.GetDropdowns()}, dropdowns2: {nextAgent.agent2.GetDropdowns()}")
-            print(f"future dropdowns: {nextGrid.GetDropdowns()}")
-            print(f"score1: {nextAgent.agent1.score}, score2: {nextAgent.agent2.score}")
-            print('\n')
+        # some debug info, indent the print lines below for more info
+        print(f"This expand took T={T} seconds, longest expansion took maxT={maxT} seconds")
+        print(f"avg T={round(sum(listT) / len(listT), ROUND_DIGITS)} seconds, Total time: {sum(listT)} seconds")
+        print(f'popped f: {f}, maxH: {maxH}, minH: {minH}, g: {nextAgent.cost}')
+        print(f"path1: {nextAgent.agent1.seq}\npath2: {nextAgent.agent2.seq}")
+        print(f"limit: {limit}")
+        print(f"pickups: {nextGrid.GetPickups()}")
+        print(f"dropdowns1: {nextAgent.agent1.GetDropdowns()}, dropdowns2: {nextAgent.agent2.GetDropdowns()}")
+        print(f"future dropdowns: {nextGrid.GetDropdowns()}")
+        print(f"score1: {nextAgent.agent1.score}, score2: {nextAgent.agent2.score}")
+        print('\n')
         return nextAgent.agent1.seq, nextAgent.agent2.seq
 
 class MultiAgentState:

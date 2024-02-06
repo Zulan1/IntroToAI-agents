@@ -168,7 +168,7 @@ class AStarAgent(SearchAgent):
             # should not reach here, if there's no pickups nor dropoffs then the agent should be done
             assert nextNodes or nextAgent.score == Grid.numOfPackages, "bug! no nodes left and not done"
 
-        # some debug info
+        # some debug info, indent the print lines below for more info
         print(f"This expand took T={T} seconds, longest expansion took maxT={maxT} seconds")
         print(f"avg T={round(sum(listT) / len(listT), ROUND_DIGITS)} seconds, Total time: {sum(listT)} seconds")
         print(f'popped f: {f}, h: {h}, g: {nextAgent.cost}')
