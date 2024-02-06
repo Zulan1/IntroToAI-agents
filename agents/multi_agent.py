@@ -6,7 +6,7 @@ from typing import Tuple
 from type_aliases import Node, Edge
 from grid import Grid
 from agents.agent import Agent
-from agents.astar_agent import AStarAgent, State
+from agents.astar_agent import AStarAgent
 from agents.interfering_agent import InterferingAgent
 
 
@@ -113,8 +113,8 @@ class MultiAgent(Agent):
         self.agent2.ProcessStep(grid, action[1], _)
 
     def Expand(self, grid: Grid, interfering: InterferingAgent, nodes: set[Node], iterations: list[int],
-               actions: set[Node], states: list[Tuple[int, int, int, State]],
-               visitedStates: set[Tuple[Node, Tuple[Tuple[Node, int]], Tuple[Tuple[Node, int]], Tuple[Edge]]]) -> None:
+               actions: set[Node], states: list[Tuple[int, int, int, MultiAgentState]],
+               visitedStates: dict[MultiAgentState, int]) -> None:
         """
         Expands the current state by generating new states based on possible actions of the agents.
 
@@ -131,7 +131,6 @@ class MultiAgent(Agent):
         Returns:
             None
         """
-        # iterate through every possible combination of the 2 agents
         actions1, actions2 = actions
         for action1 in actions1:
             for action2 in actions2:
@@ -159,18 +158,17 @@ class MultiAgent(Agent):
                 stateAgent.agent2.seq.append(action2)
 
                 # check if action1 + action2 changed anything in the state
-                visited = (stateGrid.GetPickups(),
-                            (stateAgent.agent1.coordinates, stateAgent.agent1.GetDropdowns()),
-                            (stateAgent.agent2.coordinates, stateAgent.agent2.GetDropdowns()))
-                if visited in visitedStates and\
-                (action1 != self.agent1.coordinates or action2 != self.agent2.coordinates): continue
+                currentState = MultiAgentState(stateGrid, stateAgent, stateInterference)
 
-                stateAgent.HeapPush(states, stateGrid, stateInterference, iterations, nodes)
+                if currentState in visitedStates and visitedStates[currentState] <= stateAgent.cost and\
+                (action1, action2) != (self.agent1.coordinates, self.agent2.coordinates): continue
 
-                visitedStates.add(visited)
+                stateAgent.HeapPush(states, stateGrid, iterations, nodes, currentState)
 
-    def HeapPush(self, states: list[int, int, int, int, State], grid: Grid, interfering: InterferingAgent,
-                 iterations: list[int], nodes: set[Node]) -> None:
+                visitedStates[currentState] = stateAgent.cost
+
+    def HeapPush(self, states: list[int, int, int, int, MultiAgentState], grid: Grid,
+                 iterations: list[int], nodes: set[Node], currentState: MultiAgentState) -> None:
         """
         Pushes a state onto the heap.
 
@@ -195,10 +193,8 @@ class MultiAgent(Agent):
         f = self.cost + maxH
 
         # save the new states to the heap
-        state = (grid, self, interfering)
-        heapq.heappush(states, (f, maxH, minH, 1 / iterations[0], state, nodes1, nodes2))
+        heapq.heappush(states, (f, maxH, minH, 1 / iterations[0], currentState, nodes1, nodes2))
         iterations[0] += 1
-        return True
 
     def Search(self, grid: Grid, nodes: set[Node], agents: list[Agent], i: int) -> Tuple[list[Node]]:
         """
@@ -229,8 +225,8 @@ class MultiAgent(Agent):
 
         nextInterference: InterferingAgent = [agent for agent in agents if isinstance(agent, InterferingAgent)][0]
         limit = 0
-        states: list[Tuple[int, int, int, State]] = []
-        visitedStates: set[Tuple[Node, Tuple[Tuple[Node, int]], Tuple[Tuple[Node, int]]], Tuple[Edge]] = set()
+        states: list[Tuple[int, int, int, MultiAgentState]] = []
+        visitedStates: dict[MultiAgentState, int] = {}
         self.cost = i
         iterations = [1]
         listT = []
@@ -267,12 +263,11 @@ class MultiAgent(Agent):
                 self.done = True
                 return [], []
 
-            nextGrid: Grid = nextState[0]
-            nextAgent: MultiAgent = nextState[1]
-            nextInterference: InterferingAgent = nextState[2]
+            nextGrid: Grid = nextState.grid
+            nextAgent: MultiAgent = nextState.agent
+            nextInterference: InterferingAgent = nextState.interfering
             nextNodes: set[Node] = nextAgent.FormulateGoal(nextGrid, None)
 
-            # should not reach here, if there's no pickups nor dropoffs then the agent should be done
             assert nextNodes or nextAgent.GetDropdowns() or nextAgent.score == Grid.numOfPackages,\
             "bug! no nodes left and not done"
 
@@ -288,3 +283,39 @@ class MultiAgent(Agent):
             print(f"score1: {nextAgent.agent1.score}, score2: {nextAgent.agent2.score}")
             print('\n')
         return nextAgent.agent1.seq, nextAgent.agent2.seq
+
+class MultiAgentState:
+    """
+    Represents the state of a multi-agent system.
+
+    Attributes:
+        grid (Grid): The grid representing the environment.
+        agent1 (AStarAgent): The first A* agent.
+        agent2 (AStarAgent): The second A* agent.
+        interfering (InterferingAgent): The interfering agent.
+    """
+
+    def __init__(self, grid: Grid, agent: MultiAgent, interfering: InterferingAgent):
+        self.grid: Grid = grid
+        self.agent: MultiAgent = agent
+        self.interfering: InterferingAgent = interfering
+
+    def __hash__(self):
+        return hash(self.ToBaseClasses())
+
+    def __eq__(self, other: MultiAgentState):
+        return self.ToBaseClasses() == other.ToBaseClasses()
+
+    def ToBaseClasses(self) ->\
+        Tuple[Tuple[Node, int], Tuple[Node, Tuple[Node, int]], Tuple[Node ,Tuple[Node, int]], Tuple[Edge]]:
+        """
+        Converts the current state of the multi-agent to a tuple of base classes.
+
+        Returns:
+            Tuple[Tuple[Node, int], Tuple[Node, Tuple[Node, int]], Tuple[Node ,Tuple[Node, int]], Tuple[Edge]]: 
+            A tuple containing the coordinates, pickups, dropdowns, and edges of the multi-agent.
+        """
+        return (self.agent.agent1.coordinates, self.agent.agent1.GetPickups(),
+                self.agent.agent1.GetDropdowns(), self.agent.agent2.coordinates,
+                self.agent.agent2.GetPickups(), self.agent.agent2.GetDropdowns(),
+                tuple(self.grid.fragEdges))

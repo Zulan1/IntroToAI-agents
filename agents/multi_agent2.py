@@ -1,22 +1,17 @@
 from __future__ import annotations
 import heapq
-from typing import Tuple
 from type_aliases import Node
 from grid import Grid
-from agents.agent import Agent
-from agents.multi_agent import MultiAgent
-from agents.astar_agent import State
-from agents.interfering_agent import InterferingAgent
+from agents.multi_agent import MultiAgent, MultiAgentState
 
-State = Tuple[Grid, Agent, InterferingAgent]
 ROUND_DIGITS = 5
 
 class MultiAgent2(MultiAgent):
     """MultiAgent2 class"""
     l = 1000000
 
-    def HeapPush(self, states: list[int, int, int, int, State], grid: Grid, interfering: InterferingAgent,
-                iterations: list[int], nodes: set[Node]) -> None:
+    def HeapPush(self, states: list[int, int, int, int, MultiAgentState], grid: Grid,
+                iterations: list[int], nodes: set[Node], currentState: MultiAgentState) -> None:
         """
         Pushes a state onto the heap.
 
@@ -37,6 +32,5 @@ class MultiAgent2(MultiAgent):
         f = self.cost + h
 
         # save the new states to the heap
-        state = (grid, self, interfering)
-        heapq.heappush(states, (f, h, 0, 1 / iterations[0], state, nodes, nodes))
+        heapq.heappush(states, (f, h, 0, 1 / iterations[0], currentState, nodes, nodes))
         iterations[0] += 1
