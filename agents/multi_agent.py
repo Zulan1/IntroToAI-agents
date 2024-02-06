@@ -249,7 +249,7 @@ class MultiAgent(Agent):
 
             nextAgent.Expand(nextGrid, nextInterference, nextNodes, iterations, actions, states, visitedStates)
 
-            T = round(time.time() - st, ROUND_DIGITS)
+            T = round(time.time() - st, ROUND_DIGITS) # pylint: disable=invalid-name
             listT.append(T)
             maxT = max(maxT, T)
 
