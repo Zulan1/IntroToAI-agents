@@ -1,8 +1,8 @@
-## Project Information
+# Project Information
 
 This project is using Python 3.11.
 
-# Installation
+## Installation
 
 1. (Optional) Create a venv using: "python3 -m venv venv".
 2. (Optional) Activate venv using: "./venv/Scripts/activate"(Windows) or "source ./venv/bin/activate/" on linux
@@ -12,7 +12,7 @@ This project is using Python 3.11.
 6. You can use the available tests ./tests/.
 7. Run the code with "python .".
 
-# Clarification
+## Clarification
 
 The Agents available for this projects are:
 
