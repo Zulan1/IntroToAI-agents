@@ -80,9 +80,10 @@ class AStarAgent(SearchAgent):
             stateInterference = copy.deepcopy(interfering)
 
             # process the next state
-            stateInterference.ProcessStep(stateGrid,
-                                            stateInterference.AgentStep(stateGrid, None, None),
-                                            None)
+            if interfering is not None:
+                stateInterference.ProcessStep(stateGrid,
+                                                stateInterference.AgentStep(stateGrid, None, None),
+                                                None)
             stateAgent.cost += 1
             stateAgent.ProcessStep(stateGrid, (self.coordinates, action), stateAgent.cost)
             stateAgent.seq.append(action)
@@ -118,7 +119,8 @@ class AStarAgent(SearchAgent):
         nextGrid: Grid = grid
         nextAgent: AStarAgent = self
         nextNodes: set[Node] = nodes
-        nextInterference: InterferingAgent = [agent for agent in agents if isinstance(agent, InterferingAgent)][0]
+        nextInterference: InterferingAgent =\
+        ([agent for agent in agents if isinstance(agent, InterferingAgent)] or [None])[0]
         states: list[Tuple[int, int, int, AgentState]] = []
         visitedStates: dict[AgentState, int] = {}
         limit = 0
