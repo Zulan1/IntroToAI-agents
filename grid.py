@@ -16,9 +16,9 @@ class Grid:
             y (int): 2nd dimension size
         """
         self._size: Tuple[int, int] = (x + 1, y + 1)
-        self._graph: nx.grid_2d_graph = nx.grid_2d_graph(x + 1, y + 1)
+        self._graph: nx.Graph = nx.grid_2d_graph(x + 1, y + 1)
         self._fragEdges: set[Edge] = set()
-        self._packages: dict[Node, set[Package]] = {}
+        self._packages: dict[Node, list[Package]] = {}
 
     @property
     def size(self) -> Tuple[int, int]:
@@ -40,7 +40,7 @@ class Grid:
         return self._fragEdges
 
     @property
-    def packages(self) -> dict[Node, set[Package]]:
+    def packages(self) -> dict[Node, list[Package]]:
         """returns self._packages
 
         Returns:
@@ -80,7 +80,7 @@ class Grid:
         """
         package = Package(params)
         coords = package.pickupLoc
-        self._packages[coords] = self._packages.get(coords, set()).union({package})
+        self._packages[coords] = self._packages.get(coords, []) + [package]
 
     def PickPackagesFromNode(self, coords: Node, i: int) -> set[Package]:
         """Return a Package at the location if exists and appeard and delete from grid
@@ -91,16 +91,16 @@ class Grid:
         Returns:
             Package: Package at the location if exists otherwise None
         """
-        packages = set()
-        for package in self._packages.get(coords, set()).copy():
-            if package.pickupTime <= i:
-                packages.add(package)
-                self._packages[coords].remove(package)
-                if not self._packages[coords]:
-                    del self._packages[coords]
+        packages = []
+        for package in self._packages.get(coords, [])[:]:
+            if package.pickupTime > i: continue
+            packages.append(package)
+            self._packages[coords].remove(package)
+            if not self._packages[coords]:
+                del self._packages[coords]
         return packages
 
-    def FilterAppearedPackages(self, i: int) -> dict[Package]:
+    def FilterAppearedPackages(self, i: int) -> dict[Node, list[Package]]:
         """return all packages that are currently available
 
         Args:
@@ -109,10 +109,10 @@ class Grid:
         Returns:
             dict[Package]: Currently available packages
         """
-        appearedPackeges: dict[Node, Package] = {coords:\
-            {package for package in packages if package.pickupTime <= i}\
+        appearedPackeges: dict[Node, list[Package]] = {coords:\
+            [package for package in packages if package.pickupTime <= i]\
                 for coords, packages in self._packages.items()}
-        appearedPackeges = {coords: packages for coords, packages in appearedPackeges.items() if packages != set()}
+        appearedPackeges = {coords: packages for coords, packages in appearedPackeges.items() if packages}
         return appearedPackeges
 
     def EarliestPacksage(self) -> set[Node]:
@@ -129,6 +129,33 @@ class Grid:
                 if package.pickupTime == earliest[1]:
                     earliest[0].add(node)
         return earliest[0]
+
+    def GetPickups(self) -> Tuple[Tuple[Node, int]]:
+        """Returns the nodes of the packages that need to be picked up
+
+        Returns:
+            set[Node]: The nodes of the packages that need to be picked up
+        """
+        pickups = ()
+        for node, packages in self._packages.items():
+            for package in packages:
+                pickups = pickups + ((node, package.pickupTime),)
+        return pickups
+
+    def GetDropdowns(self) -> Tuple[Tuple[Node, int]]:
+        """
+        Retrieves the dropdown locations and maximum drop-off times for all packages.
+
+        Returns:
+            A tuple of tuples, where each inner tuple contains a drop-off location (Node)
+            and maximum drop-off time (int).
+        """
+        dropdowns = ()
+        for packages in self._packages.values():
+            for package in packages:
+                dropdowns = dropdowns + ((package.dropoffLoc, package.dropOffMaxTime),)
+
+        return dropdowns
 
 class UpdateGridType(Enum):
     """Enum for options to update grid."""

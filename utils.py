@@ -3,10 +3,24 @@ from grid import Grid, UpdateGridType
 from agents.agent import Agent, AgentType
 from agents.human_agent import HumanAgent
 from agents.interfering_agent import InterferingAgent
-from agents.rtastar_agent import RTAStarAgent
-from agents.astar_agent import AStarAgent
+from agents.stupid_greedy_agent import StupidGreedyAgent
 from agents.greedy_agent import GreedyAgent
+from agents.astar_agent import AStarAgent
+from agents.rtastar_agent import RTAStarAgent
+from agents.multi_agent import MultiAgent
+from agents.multi_agent2 import MultiAgent2
 from type_aliases import Node
+
+agent_classes = {
+    AgentType.STUPID_GREEDY.value: StupidGreedyAgent,
+    AgentType.GREEDY.value: GreedyAgent,
+    AgentType.A_STAR.value: AStarAgent,
+    AgentType.RTA_STAR.value: RTAStarAgent,
+    AgentType.HUMAN.value: HumanAgent,
+    AgentType.INTERFERING.value: InterferingAgent,
+    AgentType.MULTI_AGNENT.value: MultiAgent,
+    AgentType.MULTI_AGNENT2.value: MultiAgent2,
+}
 
 def InitGrid(initFilePath: str) -> (Grid, list[Agent]):
     """initializes grid from init file
@@ -35,21 +49,19 @@ def InitGrid(initFilePath: str) -> (Grid, list[Agent]):
         if any(action == updateGridType.value for updateGridType in UpdateGridType):
             grid.UpdateGrid(action, line[1:])
 
+    Grid.numOfPackages = len(sum(grid.packages.values(), []))
+
     agents: list[Agent] = []
     for line in lines: # build the agents specified in the file
         action = line[0]
-        if not any(action == agentType.value for agentType in AgentType): continue
-        if action == AgentType.GREEDY.value:
-            agents.append(AStarAgent(line[1:]))
-        if action == AgentType.HUMAN.value:
-            agents.append(HumanAgent(line[1:], grid))
-        if action == AgentType.INTERFERING.value:
-            agents.append(InterferingAgent(line[1:]))
+        if action not in agent_classes: continue
+        agents.append(agent_classes[action](line[1:], grid))
 
     for agent in agents:
         agent.ProcessStep(grid)
 
-    Grid.numOfPackages = len(set.union(*grid.packages.values()))
+    lastDropOffTime = max(p.dropOffMaxTime for p in sum(grid.packages.values(), []))
+    Agent.lastDropOffTime = lastDropOffTime
 
     return grid, agents
 
@@ -66,6 +78,8 @@ def SearchMinPath(grid: Grid, start: Node, nodes: set[Node]) -> list[Node]:
     minPath = None
     for node in nodes:
         path = Dijkstra(grid.graph, start, node)
+        if path == float('inf'):
+            raise ValueError(f"no path between {start} and {node}")
         minPath = ComparePaths(minPath, path)
     return list(minPath)
 
@@ -83,7 +97,7 @@ def ComparePaths(path0: list[Node], path1: list[Node]) -> list[Node]:
         return path1
     if path1 is None or (len(path0) < len(path1)):
         return path0
-    return min(path0, path1, key=lambda path: (path[-1].x, path[-1].y))
+    return min(path0, path1, key=lambda path: (path[-1][0], path[-1][1]))
 
 def Dijkstra(g: nx.Graph, start: Node, end: Node) -> list[Node]:
     """dijkstra algorithm implementation
@@ -96,6 +110,9 @@ def Dijkstra(g: nx.Graph, start: Node, end: Node) -> list[Node]:
     Returns:
         list[Node]: the shortest path between start and end
     """
+    if not nx.has_path(g, start, end):
+        return float('inf')
+
     dist = {start: 0}
     prev = {}
     q = set(g.nodes())
@@ -117,7 +134,7 @@ def Dijkstra(g: nx.Graph, start: Node, end: Node) -> list[Node]:
     path.insert(0, u)
     return path
 
-def MinimumSpanningTree(g: nx.Graph) -> nx.Graph:
+def SumWeigthsMST(g: nx.Graph) -> int:
     """Kruksal's minimum spanning tree algorithm implementation
 
     Args:
@@ -128,8 +145,33 @@ def MinimumSpanningTree(g: nx.Graph) -> nx.Graph:
     """
     mst = nx.Graph()
     mst.add_nodes_from(g.nodes)
-    edges = sorted(g.edges(data=True), key=lambda edge: edge[2].get('weight', 1))
-    for edge in edges:
-        if not nx.has_path(mst, edge[0], edge[1]):
-            mst.add_edge(edge[0], edge[1], weight=edge[2].get('weight', 1))
-    return mst
+
+    edges = []
+    for u, v in set(g.edges()):
+        weight = g[u][v]['weight']
+        edges.append((u, v, weight))
+
+    edges = sorted(edges, key=lambda edge: edge[2])
+
+    sumWeights = 0
+
+    for u, v, w in edges:
+        if nx.has_path(mst, u, v): continue
+        mst.add_edge(u, v, weight=w)
+        sumWeights += w
+
+    return sumWeights
+
+def GetNeighbors(grid: Grid, node: Node) -> set[Node]:
+    """Gets the neighbors of a node
+
+    Args:
+        grid (Grid): the simulator's grid
+        node (Node): a node
+
+    Returns:
+        set[Node]: the neighbors of the node
+    """
+    actions = set(edge[1] for edge in grid.graph.edges() if edge[0] == node).union(
+        set(edge[0] for edge in grid.graph.edges() if edge[1] == node))
+    return actions

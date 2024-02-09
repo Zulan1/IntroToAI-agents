@@ -1,4 +1,5 @@
 import sys
+import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from matplotlib.widgets import Button
@@ -7,15 +8,17 @@ from type_aliases import Node, Edge
 from agents.agent import Agent
 from agents.interfering_agent import InterferingAgent
 from agents.search_agent import SearchAgent
+from agents.multi_agent import MultiAgent
+from agents.multi_agent2 import MultiAgent2
 from grid import Grid
 
+matplotlib.use('TkAgg')
+
 class HumanAgent(Agent):
-    """class for Human Agent
-    """
+    """class for Human Agent"""
 
     def __init__(self, params:list[str], grid: Grid):
-        super().__init__(params)
-        self.init = False
+        super().__init__(params, grid)
         fig, ax = plt.subplots(figsize=(16, 9))
         self.ax = ax
         self.pos = {(x, y): (x, -y) for x, y in grid.graph.nodes()}
@@ -38,7 +41,7 @@ class HumanAgent(Agent):
         brownHandle = mpatches.Patch(color='brown', label='- Pickup')
         greenHandle = mpatches.Patch(color='green', label='- Active Dropoff')
         purpleHandle = mpatches.Patch(color='purple', label='- Passive Dropoff')
-        blueHandle = mpatches.Patch(color='blue', label='- Greedy')
+        blueHandle = mpatches.Patch(color='blue', label='- Agent/s')
         redHandle = mpatches.Patch(color='red', label='- Interfering')
         orangeHandle = mpatches.Patch(color='orange', label='- Human')
         self.handles = [iHandle, scoreHandle, brownHandle, greenHandle,
@@ -88,7 +91,7 @@ class HumanAgent(Agent):
         nx.draw_networkx_edges(grid.graph, self.pos, width=2, edge_color=edgeColors, ax=self.ax)
         for node in grid.graph.nodes():
             colors: set[str] = set()
-            for package in set().union(*grid.packages.values()):
+            for package in sum(grid.packages.values(), []):
                 if node == package.dropoffLoc:
                     colors.add('purple')
             if node in grid.packages.keys():
@@ -98,10 +101,15 @@ class HumanAgent(Agent):
                     colors.add('orange')
                 if isinstance(agent, InterferingAgent) and agent.coordinates == node:
                     colors.add('red')
-                if isinstance(agent, SearchAgent):
+                if isinstance(agent, SearchAgent) and not isinstance(agent, InterferingAgent):
                     if node in agent.packages:
                         colors.add('green')
                     if agent.coordinates == node:
+                        colors.add('#0000FF')
+                if isinstance(agent, MultiAgent) or isinstance(agent, MultiAgent2):
+                    if node in agent.agent1.packages or node in agent.agent2.packages:
+                        colors.add('green')
+                    if agent.agent1.coordinates == node or agent.agent2.coordinates == node:
                         colors.add('#0000FF')
             if not colors:
                 colors.add('#069AF3')
@@ -109,7 +117,9 @@ class HumanAgent(Agent):
 
         nx.draw_networkx_labels(grid.graph, self.pos, ax=self.ax)
         iHandle = mpatches.Patch(color='none', label=f'i = {i}')
-        score = [agent.score for agent in agents if isinstance(agent, SearchAgent)][0]
+        score = ([agent.score for agent in agents if isinstance(agent, SearchAgent)] +\
+            [(agent.agent1.score, agent.agent2.score)
+            for agent in agents if isinstance(agent, MultiAgent) or isinstance(agent, MultiAgent2)])[0]
         scoreHandle = mpatches.Patch(color='none', label=f'score = {score}')
         self.handles[0] = iHandle
         self.handles[1] = scoreHandle

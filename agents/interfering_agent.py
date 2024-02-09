@@ -1,40 +1,48 @@
 from agents.agent import Agent
+from agents.search_agent import SearchAgent
 from grid import Grid
-from type_aliases import Edge
+from type_aliases import Edge, Node
 
-class InterferingAgent(Agent):
+class InterferingAgent(SearchAgent):
     """Class for Interfering Agent"""
 
-    def __init__(self, params: list[str]):
+    def __init__(self, params: list[str], _: Grid):
         """Builder function for interfereing agent
         """
-        super().__init__(params)
+        super().__init__(params, _)
         self.seq = []
 
+    def FormulateGoal(self, grid: Grid, _: int) -> set[Node]:
+        """Formulates the goal of the agent
 
-    def AgentStep(self, grid: Grid, _, __) -> Edge:
-        """Calculates the next step of the Interfering Agent
+        Args:
+            grid (Grid): the simulator's grid
+            i (int): the index of the agent
 
         Returns:
-            Edge: The edge the Interfering agent traverses in the next step."""
-        from utils import SearchMinPath
-        super().AgentStep(grid, _, __)
+            set[Node]: the goal of the agent
+        """
+        nodes = set(node for node, _ in grid.fragEdges).union(set(node for _, node in grid.fragEdges))
+        if self.coordinates in nodes:
+            nodes = set(node1 if node2 == self.coordinates else node2
+                       for node1, node2, in grid.fragEdges
+                       if (node1, node2) == (self.coordinates, node2) or (node1, node2) == (node1, self.coordinates))
+        return nodes
 
-        actions = list(edge for edge in grid.fragEdges if edge[0] == self.coordinates)
-        actions += list(edge[::-1] for edge in grid.fragEdges if edge[1] == self.coordinates)
-        if actions:
-            action = actions[0]
-            for edge in actions[1:]:
-                # prefer lower x, then lower y in case of equality
-                if edge[1][0] < action[1][0] or (edge[1][0] == action[1][0] and edge[1][1] < action[1][1]):
-                    action = edge
-            return action
-        if not self.seq:
-            nodes = set(edge[0] for edge in grid.fragEdges).union(set(edge[1] for edge in grid.fragEdges))
-            if nodes == set():
-                self.done = True
-                return (self.coordinates, self.coordinates)
-            self.seq = SearchMinPath(grid, self.coordinates, nodes)[1:]
-        action: Edge = (self.coordinates, self.seq[0])
-        self.seq = self.seq[1:]
-        return action
+    def Search(self, grid: Grid, nodes: set[Node], _, __) -> list[Node]:
+        """Searches for the shortest path to the goal
+
+        Args:
+            grid (Grid): the simulator's grid
+            nodes (set[Node]): the goal
+
+        Returns:
+            list[Node]: the shortest path to the goal
+        """
+        from utils import SearchMinPath
+
+        return SearchMinPath(grid, self.coordinates, nodes)[1:]
+
+
+    def ProcessStep(self, grid: Grid, action: Edge = None, _: int = 0) -> None:
+        Agent.ProcessStep(self, grid, action, _)
