@@ -1,5 +1,6 @@
 import networkx as nx
 from grid import Grid, UpdateGridType
+from typing import Tuple
 from agents.agent import Agent, AgentType
 from agents.human_agent import HumanAgent
 from agents.interfering_agent import InterferingAgent
@@ -22,7 +23,7 @@ agent_classes = {
     AgentType.MULTI_AGNENT2.value: MultiAgent2,
 }
 
-def InitGrid(initFilePath: str) -> (Grid, list[Agent]):
+def InitGrid(initFilePath: str) -> Tuple[Grid, list[Agent]]:
     """initializes grid from init file
 
     Args:
